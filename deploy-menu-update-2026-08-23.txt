@@ -1,0 +1,1 @@
+Menu database update: Kopi menu and Minum Sachetan verified in Supabase Owner database on 2026-08-23. This marker triggers the connected Vercel deployment so Owner, Kasir, Pelanggan use the current Supabase data source.
