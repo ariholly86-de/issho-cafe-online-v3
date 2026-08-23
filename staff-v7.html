@@ -1,7 +1,102 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-store"><title>ISSHO CAFE — KASIR</title><style>html,body{margin:0;width:100%;height:100%;background:#0b0b0b}iframe{display:block;width:100%;height:100%;border:0}</style></head><body><iframe id="kasir" src="staff-v6.html?v=20260823-expense-detail" title="ISSHO CAFE KASIR"></iframe><script>
-const U='https://xvhimyflrqrdudijwjdn.supabase.co',K='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';const f=document.getElementById('kasir');
-async function api(path,opt={}){const h=Object.assign({apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},opt.headers||{});const r=await fetch(U+path,Object.assign({cache:'no-store'},opt,{headers:h}));const t=await r.text();if(!r.ok)throw Error(t);return t?JSON.parse(t):null}
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>ISSHO CAFE — KASIR</title>
+<style>html,body{margin:0;width:100%;height:100%;background:#0b0b0b}iframe{display:block;width:100%;height:100%;border:0}</style>
+</head>
+<body>
+<iframe id="kasir" src="staff-v6.html?v=20260823-expense-detail-blue2" title="ISSHO CAFE KASIR"></iframe>
+<script>
+const U='https://xvhimyflrqrdudijwjdn.supabase.co';
+const K='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
+const f=document.getElementById('kasir');
+async function api(path,opt={}){
+  const h=Object.assign({apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},opt.headers||{});
+  const r=await fetch(U+path,Object.assign({cache:'no-store'},opt,{headers:h}));
+  const t=await r.text();
+  if(!r.ok)throw Error(t);
+  return t?JSON.parse(t):null;
+}
 const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
-function install(){try{const w=f.contentWindow,d=w.document;if(!d||!w.$||!w.P)return false;let st=d.getElementById('expense-detail-v7');if(!st){st=d.createElement('style');st.id='expense-detail-v7';st.textContent='button[onclick="showExpense()"],button[onclick="saveExpense()"]{background:#315b9a!important;color:#fff!important}button[onclick="showReport()"]{background:#315b9a!important;color:#fff!important}.expense-detail-v7{margin-top:12px;border-top:1px solid #383838;padding-top:12px}.expense-detail-v7 .expense-row{padding:9px 0;border-bottom:1px solid #333}.expense-detail-v7 .expense-row:last-child{border-bottom:0}.expense-detail-v7 .expense-desc{color:#ddd;font-size:13px;margin-top:3px}';d.head.appendChild(st)}const original=w.report;if(!w.__expenseReportPatched){w.__expenseReportPatched=true;w.report=async function(){await original();const date=d.getElementById('date')?.value;if(!date)return;try{const rows=await api('/rest/v1/rpc/staff_get_expenses',{method:'POST',body:JSON.stringify({p_pin:w.P,p_from:date,p_to:date})});const list=Array.isArray(rows)?rows:[];const box=d.getElementById('reportOut');let el=d.getElementById('expense-detail-v7');if(!el){el=d.createElement('div');el.id='expense-detail-v7';el.className='card expense-detail-v7';box.appendChild(el)}el.innerHTML='<h3>💸 Detail Pengeluaran</h3>'+(list.length?list.map(e=>'<div class="expense-row"><div class="row"><div><b>'+w.esc(e.category||'Operasional')+'</b><div class="expense-desc">'+w.esc(e.description||'Tidak ada keterangan')+'</div><span class="muted">'+w.esc(e.expense_date||date)+'</span></div><b>'+money(e.amount)+'</b></div></div>').join(''):'<div class="muted">Tidak ada pengeluaran pada tanggal ini.</div>')}catch(e){d.getElementById('reportOut').insertAdjacentHTML('beforeend','<div class="err">Detail pengeluaran gagal dimuat.</div>')}}}return true}catch(e){return false}}
-let n=0;f.addEventListener('load',()=>{const t=setInterval(()=>{n++;if(install()||n>120)clearInterval(t)},250)});
-</script></body></html>
+function install(){
+  try{
+    const w=f.contentWindow,d=w.document;
+    if(!d||!d.body)return false;
+
+    let st=d.getElementById('expense-detail-blue2');
+    if(!st){
+      st=d.createElement('style');
+      st.id='expense-detail-blue2';
+      st.textContent=`
+        button[onclick="showOrders()"],
+        button[onclick="showReport()"],
+        button[onclick="showExpense()"],
+        button[onclick="changePinBox()"]{
+          background:#1976d2!important;color:#fff!important;border:1px solid #42a5f5!important;
+        }
+        button[onclick="showOrders()"]:hover,
+        button[onclick="showReport()"]:hover,
+        button[onclick="showExpense()"]:hover,
+        button[onclick="changePinBox()"]:hover{background:#1565c0!important}
+        .expense-detail-blue2{margin-top:12px;padding:14px;border:1px solid #383838;border-radius:12px;background:#151515}
+        .expense-detail-blue2 .expense-row{padding:11px 0;border-bottom:1px solid #333}
+        .expense-detail-blue2 .expense-row:last-child{border-bottom:0}
+        .expense-detail-blue2 .expense-desc{color:#f2f2f2;font-size:14px;margin-top:4px}
+        .expense-detail-blue2 .expense-meta{color:#aaa;font-size:12px;margin-top:4px}
+      `;
+      d.head.appendChild(st);
+    }
+
+    // P is declared with let inside staff-v6, so it is not a window property.
+    // Read it from the iframe's same-origin lexical environment.
+    let pin='';
+    try{ pin=w.eval('typeof P!=="undefined" ? P : ""'); }catch(e){}
+    if(!pin)return false;
+
+    if(!w.__expenseReportPatchedBlue2){
+      w.__expenseReportPatchedBlue2=true;
+      const original=w.report;
+      w.report=async function(){
+        await original();
+        const date=d.getElementById('date')?.value;
+        if(!date)return;
+        const box=d.getElementById('reportOut');
+        if(!box)return;
+        let el=d.getElementById('expense-detail-blue2');
+        if(!el){
+          el=d.createElement('div');
+          el.id='expense-detail-blue2';
+          el.className='card expense-detail-blue2';
+          box.appendChild(el);
+        }
+        try{
+          const rows=await api('/rest/v1/rpc/staff_get_expenses',{
+            method:'POST',
+            body:JSON.stringify({p_pin:pin,p_from:date,p_to:date})
+          });
+          const list=Array.isArray(rows)?rows:[];
+          el.innerHTML='<h3 style="margin-top:0">💸 Detail Pengeluaran</h3>'+(
+            list.length
+            ? list.map(e=>'<div class="expense-row"><div style="display:flex;justify-content:space-between;gap:12px"><div><b>'+w.eval('esc')(e.category||'Operasional')+'</b><div class="expense-desc">'+w.eval('esc')(e.description||'Tidak ada keterangan')+'</div><div class="expense-meta">Tanggal: '+w.eval('esc')(e.expense_date||date)+'</div></div><b>'+money(e.amount)+'</b></div></div>').join('')
+            : '<div class="muted">Tidak ada pengeluaran pada tanggal ini.</div>'
+          );
+        }catch(e){
+          el.innerHTML='<h3 style="margin-top:0">💸 Detail Pengeluaran</h3><div class="err">Detail pengeluaran gagal dimuat. Silakan tekan Tampilkan lagi.</div>';
+        }
+      };
+    }
+    return true;
+  }catch(e){return false}
+}
+let tries=0;
+function start(){
+  const timer=setInterval(()=>{tries++;if(install()||tries>240)clearInterval(timer)},250);
+}
+f.addEventListener('load',start);
+start();
+</script>
+</body>
+</html>
