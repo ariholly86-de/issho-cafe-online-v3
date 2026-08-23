@@ -1,0 +1,6 @@
+Steak menu image display rules:
+- Keep steak plate image visually smaller inside menu card so accompanying iced tea glass remains clearly visible.
+- For + Es Teh variants, use glass iced tea, not plastic cup.
+- For + Nasi variants, show rice clearly beside steak.
+- Double variants must visibly show double steak portion.
+- Owner and customer must read the same products.image_url source from Supabase.
