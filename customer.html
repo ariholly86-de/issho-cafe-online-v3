@@ -1,31 +1,76 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-store"><title>ISSHO CAFE — Menu Pelanggan</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0b0b}iframe{width:100%;height:100%;border:0;display:block}</style></head><body><iframe id="app" title="ISSHO CAFE"></iframe><script>
-const SUPA='https://xvhimyflrqrdudijwjdn.supabase.co',KEY='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St',frame=document.getElementById('app');
-function esc(s){return String(s??'').replace(/[&<>\\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;',"'":'&#39;'}[m]))}
-async function get(path){const r=await fetch(SUPA+path,{cache:'no-store',headers:{apikey:KEY,Authorization:'Bearer '+KEY}});if(!r.ok)throw Error(await r.text());return r.json()}
-function tableKey(v){return String(v??'').trim().replace(/^meja\\s*/i,'').padStart(2,'0')}
-async function sync(){try{
- const w=frame.contentWindow;if(!w||!w.document||!w.api)return;
- const[cats,productsAll,tables]=await Promise.all([
-  get('/rest/v1/categories?select=id,name,active,sort_order&active=eq.true&order=sort_order,name'),
-  get('/rest/v1/products?select=id,category_id,name,description,price,image_url,sort_order,active&active=eq.true&order=sort_order,name'),
-  get('/rest/v1/tables?select=id,table_number,name,qr_slug&active=eq.true&order=table_number')
- ]);
- const products=(productsAll||[]).filter(p=>p.active===true&&typeof p.image_url==='string'&&p.image_url.trim()!=='');
- const populated=(cats||[]).filter(c=>products.some(p=>p.category_id===c.id));
- if(!populated.length)throw Error('Belum ada kategori yang memiliki menu bergambar aktif.');
- const map=Object.fromEntries((cats||[]).map(c=>[c.id,c.name]));
- w.categories=populated;w.products=products;w.tables=tables||[];w.category=p=>map[p.category_id]||'Tanpa Kategori';
- let old=w.activeCat||'';w.activeCat=populated.some(c=>c.name===old)?old:populated[0].name;
- const qp=new URLSearchParams(location.search).get('table'),q=tableKey(qp),t=(tables||[]).find(x=>x.qr_slug===qp)||(tables||[]).find(x=>tableKey(x.table_number)===q)||(tables||[])[0];
- if(!t)throw Error('Belum ada meja aktif.');w.tableId=t.id;
- const ts=w.document.getElementById('ts');if(ts){ts.innerHTML=(tables||[]).map(x=>'<option value="'+x.id+'" '+(x.id===t.id?'selected':'')+'>'+esc(x.name)+'</option>').join('');ts.onchange=e=>{w.tableId=e.target.value;const tt=(tables||[]).find(x=>x.id===w.tableId);if(tt)w.document.getElementById('tn').textContent=tt.name}}
- const tn=w.document.getElementById('tn');if(tn)tn.textContent=t.name;
- w.setActiveCategory=function(name){w.activeCat=name;w.renderCats();w.renderMenu()};
- w.renderCats=function(){const e=w.document.getElementById('cats');if(!e)return;const a=w.activeCat||populated[0].name;e.innerHTML=populated.map(c=>'<button type="button" class="cat '+(a===c.name?'active':'')+'" onclick="setActiveCategory('+JSON.stringify(c.name)+')">'+esc(c.name)+'</button>').join('')};
- w.renderMenu=function(){const q=(w.document.getElementById('search')?.value||'').trim().toLowerCase(),a=w.activeCat||populated[0].name,list=products.filter(p=>map[p.category_id]===a&&(!q||(p.name+' '+(p.description||'')+' '+a).toLowerCase().includes(q)));const count=w.document.getElementById('count');if(count)count.textContent=a+' • '+list.length+' menu tersedia';const menu=w.document.getElementById('menu');if(!menu)return;menu.innerHTML=list.length?list.map(p=>'<div class="menu"><div class="photo" style="background-image:url(\\''+esc(p.image_url)+'\\')"></div><span class="tag">'+esc(a)+'</span><h3>'+esc(p.name)+'</h3><div class="muted">'+esc(p.description||'')+'</div><div class="row" style="margin-top:auto"><b class="price">'+w.money(p.price)+'</b><button class="gold" onclick="add(\\''+p.id+'\\')">Tambah</button></div></div>').join(''):'<div class="card">Belum ada menu aktif bergambar pada kategori <b>'+esc(a)+'</b>.</div>'};
- w.renderCats();w.renderMenu();if(typeof w.renderCart==='function')w.renderCart();
- const load=w.document.getElementById('load'),app=w.document.getElementById('app');if(load)load.className='hidden';if(app)app.className='';
- }catch(e){console.error('Customer menu sync:',e)}}
-frame.src='customer-v2.html?v=customer-category-final-20260823-2'+location.search+location.hash;
-frame.addEventListener('load',()=>{let n=0;const wait=()=>{try{if(frame.contentDocument?.getElementById('cats')&&frame.contentWindow?.api){sync();setInterval(sync,3000);return}}catch(e){}if(n++<100)setTimeout(wait,100)};wait()});
-</script></body></html>
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ISSHO CAFE — Menu Pelanggan</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#0b0b0b;color:#f5f5f5}.wrap{max-width:1200px;margin:auto;padding:12px}.head{background:#050505;color:#fff;position:sticky;top:0;z-index:20;border-bottom:1px solid #292929}.brand{font-size:27px;font-weight:900}.sub{font-size:12px;color:#bdbdbd}.hero{background:#171717;color:#fff;border:1px solid #303030;border-radius:16px;padding:16px;margin:14px 0}.tools{position:sticky;top:72px;z-index:10;background:#0b0b0b;padding:8px 0}.search,input,select,textarea{width:100%;padding:11px;border:1px solid #3b3b3b;border-radius:10px;background:#171717;color:#fff;font:inherit}.search::placeholder,input::placeholder,textarea::placeholder{color:#999}.cats{display:flex;gap:7px;overflow:auto;padding:8px 0}.cat{white-space:nowrap;border:1px solid #444;border-radius:999px;padding:9px 13px;background:#242424;color:#fff;font-weight:800}.cat.active{background:#b68142;border-color:#b68142}.count{font-size:12px;color:#aaa;margin:4px 0 10px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:12px}.menu{background:#141414;border:1px solid #333;border-radius:16px;padding:11px;min-height:300px;display:flex;flex-direction:column;box-shadow:0 4px 14px #000}.photo{height:145px;border-radius:12px;background:#090909 center/cover no-repeat;margin-bottom:9px}.tag{display:inline-block;align-self:flex-start;background:#2a2118;color:#f3d29e;border:1px solid #59442a;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:800}.menu h3{font-size:16px;margin:7px 0 4px;color:#fff}.muted{color:#b8b8b8;font-size:12px}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.price,.total{font-weight:900;color:#fff}.total{font-size:22px}.card{background:#121212;border:1px solid #303030;color:#f5f5f5;border-radius:16px;padding:16px;margin:14px 0}.item{padding:9px 0;border-bottom:1px solid #303030}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}button{border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}.gold{background:#b68142;color:#fff}.dark{background:#171717;color:#fff}.green{background:#2f7d50;color:#fff}.err{background:#4a1d1a;color:#ffd9d5;padding:12px;border-radius:10px}.ok{background:#193b25;color:#d9ffe5;padding:12px;border-radius:10px}.hidden{display:none}.qris{text-align:center}.qrisimg{width:min(420px,100%);border:1px solid #444;border-radius:14px}.hint{background:#3b301c;color:#ffe8b2;padding:12px;border-radius:10px;font-size:13px}.proof{margin-top:10px}.proof input{padding:8px}@media(max-width:600px){.wrap{padding:10px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.menu{padding:9px;min-height:265px}.photo{height:105px}.menu h3{font-size:14px}.menu button{padding:8px 10px;font-size:12px}.tools{top:69px}}
+</style>
+</head>
+<body>
+<header class="head"><div class="wrap"><div class="brand">ISSHO CAFE</div><div class="sub">MENU & ONLINE ORDER • MENU PELANGGAN</div></div></header>
+<main class="wrap">
+<div id="load" class="card">Menghubungkan ke ISSHO CAFE...</div>
+<div id="app" class="hidden">
+<div class="hero"><div style="font-size:11px;color:#aaa">DINE IN</div><h2 id="tn" style="margin:5px 0">Meja 01</h2><select id="ts"></select><div style="font-size:11px;color:#aaa;margin-top:7px">Nomor meja otomatis mengikuti QR.</div></div>
+<div class="tools"><input id="search" class="search" placeholder="🔎 Cari menu..." oninput="renderMenu()"><div id="cats" class="cats"></div><div id="count" class="count"></div></div>
+<div id="menu" class="grid"></div>
+<div class="card"><h3>Keranjang Pesanan</h3><div id="cart"></div><div class="row" style="margin-top:12px"><b>Total</b><span id="tot" class="total">Rp0</span></div><textarea id="note" rows="2" placeholder="Catatan pesanan, contoh: tidak pedas, gula sedikit..."></textarea><div class="actions"><button class="gold" onclick="place('QRIS')">Pesan & QRIS</button><button class="dark" onclick="place('CASH')">Pesan & Tunai</button></div><div id="result"></div></div>
+<div id="qrisbox" class="hidden"></div>
+</div></main>
+<script>
+const URL='https://xvhimyflrqrdudijwjdn.supabase.co';
+const KEY='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
+const PAYBUCKET='payment-proofs';
+let tables=[],products=[],categories=[],cart=[],tableId=null,activeCat='';
+const $=id=>document.getElementById(id);
+const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+async function api(path,opt={}){const headers=Object.assign({apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},opt.headers||{});const r=await fetch(URL+path,Object.assign({cache:'no-store'},opt,{headers}));const text=await r.text();if(!r.ok)throw Error(text||('HTTP '+r.status));return text?JSON.parse(text):null}
+function tableKey(v){return String(v??'').trim().replace(/^meja\s*/i,'').padStart(2,'0')}
+function renderCats(){
+  $('cats').innerHTML=categories.map(c=>`<button type="button" class="cat ${activeCat===c.name?'active':''}" data-cat="${esc(c.name)}">${esc(c.name)}</button>`).join('');
+  document.querySelectorAll('#cats .cat').forEach(btn=>btn.onclick=()=>{activeCat=btn.dataset.cat;renderCats();renderMenu()});
+}
+function renderMenu(){
+  const q=($('search').value||'').trim().toLowerCase();
+  const list=products.filter(p=>p.category_id&&categories.some(c=>c.id===p.category_id&&c.name===activeCat)&&(!q||(p.name+' '+(p.description||'')+' '+activeCat).toLowerCase().includes(q)));
+  $('count').textContent=`${activeCat} • ${list.length} menu tersedia`;
+  $('menu').innerHTML=list.length?list.map(p=>`<div class="menu"><div class="photo" style="background-image:url('${esc(p.image_url)}')"></div><span class="tag">${esc(activeCat)}</span><h3>${esc(p.name)}</h3><div class="muted">${esc(p.description||'')}</div><div class="row" style="margin-top:auto"><b class="price">${money(p.price)}</b><button class="gold" type="button" onclick="add('${p.id}')">Tambah</button></div></div>`).join(''):`<div class="card">Belum ada menu aktif bergambar pada kategori <b>${esc(activeCat)}</b>.</div>`;
+}
+function add(id){const x=cart.find(a=>a.id===id);x?x.qty++:cart.push({id,qty:1});renderCart()}
+function ch(id,d){const x=cart.find(a=>a.id===id);if(!x)return;x.qty+=d;if(x.qty<1)cart=cart.filter(a=>a.id!==id);renderCart()}
+function renderCart(){let total=0;$('cart').innerHTML=cart.length?cart.map(x=>{const p=products.find(a=>a.id===x.id);if(!p)return'';total+=Number(p.price)*x.qty;return`<div class="row item"><span>${esc(p.name)}<br><small>${money(p.price)}</small></span><span><button type="button" onclick="ch('${x.id}',-1)">−</button> ${x.qty} <button type="button" onclick="ch('${x.id}',1)">+</button></span></div>`}).join(''):'Keranjang masih kosong.';$('tot').textContent=money(total)}
+async function start(){
+ try{
+  [categories,products,tables]=await Promise.all([
+   api('/rest/v1/categories?select=id,name,active,sort_order&active=eq.true&order=sort_order,name'),
+   api('/rest/v1/products?select=id,category_id,name,description,price,image_url,sort_order,active&active=eq.true&order=sort_order,name'),
+   api('/rest/v1/tables?select=id,table_number,name,qr_slug&active=eq.true&order=table_number')
+  ]);
+  products=(products||[]).filter(p=>p.active===true&&typeof p.image_url==='string'&&p.image_url.trim()!=='');
+  categories=(categories||[]).filter(c=>c.active===true&&products.some(p=>p.category_id===c.id));
+  if(!categories.length)throw Error('Belum ada kategori dengan menu bergambar aktif.');
+  activeCat=categories[0].name;
+  const qp=new URLSearchParams(location.search).get('table');
+  const q=tableKey(qp);
+  const t=(tables||[]).find(x=>x.qr_slug===qp)||(tables||[]).find(x=>tableKey(x.table_number)===q)||(tables||[])[0];
+  if(!t)throw Error('Belum ada meja aktif.');
+  tableId=t.id;
+  $('tn').textContent=t.name;
+  $('ts').innerHTML=tables.map(x=>`<option value="${x.id}" ${x.id===tableId?'selected':''}>${esc(x.name)}</option>`).join('');
+  $('ts').onchange=e=>{tableId=e.target.value;const tt=tables.find(x=>x.id===tableId);if(tt)$('tn').textContent=tt.name};
+  renderCats();renderMenu();renderCart();$('load').className='hidden';$('app').className='';
+ }catch(e){$('load').innerHTML=`<b>Koneksi gagal</b><div class="err" style="margin-top:8px">${esc(e.message)}</div><button class="gold" style="margin-top:8px" onclick="location.reload()">Coba lagi</button>`}
+}
+async function place(method){if(!cart.length)return alert('Keranjang masih kosong.');try{const r=await api('/rest/v1/rpc/create_customer_order',{method:'POST',body:JSON.stringify({p_table_id:tableId,p_payment_method:method,p_items:cart.map(x=>({product_id:x.id,quantity:x.qty})),p_note:$('note').value.trim()||null})});cart=[];renderCart();$('result').innerHTML=`<div class="ok"><b>Pesanan berhasil dibuat.</b><br>Nomor pesanan: <b>${esc(r.order_number)}</b><br>Total: <b>${money(r.total)}</b></div>`;if(method==='QRIS')showQRIS(r.id,r.total);else $('qrisbox').className='hidden'}catch(e){$('result').innerHTML=`<div class="err">Pesanan gagal: ${esc(e.message)}</div>`}}
+function showQRIS(id,total){$('qrisbox').className='card qris';$('qrisbox').innerHTML=`<h2>PEMBAYARAN QRIS</h2><p>Scan QRIS ISSHO CAFE dan bayar sesuai total.</p><img class="qrisimg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcgAAAHIAQAAAADi2kdHAAADmUlEQVR42u1cwW5cQQizq/7/L7sHMENuVU881ZGyWWUfFyPAeDxL4R9/fiGRiUxkIhOZyP81EpI0b9FvBQiChH4D7Y8hScH2YuRv5w8gIAogBIBivVAQQIH7yWB7OZ8gnMT6A4CVXaevEjxPBtvT+XQfJVjt1yXa9VrJVLD9WKQEEiBIEKxy1AzUIPSR+nyNVSAogF2b3WZVtbpqNNjejSTJSqa45mnPShMi8D0ZbA/X56whlcritJ3SJkVc9DbYHo+ciVnZk8SuxTdYnelgezqSWu8oyv+p1M4v1iYTbO/Pz1pO2MJBSwskunJnDSVdtsH2eKTXkpc39fbZFNcTtTbUYHs4Uk1yS1CojaWXTjXHXUQp9Xl7ftK81RLuqHqWbSH342G5wfZspLxXSp6TQ4rwlCE35NTn8f2TzWw7a1zFCogQVcctzZpSn8f1hNkst2jQOZRTqGnRVLC9zocEidYWKsfdXL2TsphtC7rB9jIfMtUR3/bi4Un90B6c3mB7t9+CZrY+8py0dhsWe7DKJ6TB9mw+fUDmGdoHKoT4BD61ZOSCDbZ3+a06hwJfRY5cHJMJHMjAWNCCbaH67MpblVgC3uLGPWxC9jsNvPz+r4yTiHKO+dofJb+2ugXfegDkXYf1Hrirtu548hD40gJtqcjNfI7JI6oMErunGOPsSjYHt4/sdNVDIj7IfVsXUJDsL0dqfZqsqrVMvyTiMonr6YB9u7+pBlvGK3c+thiUUYX7UXlmB7eV+pE5S2nOAZTJYIH2w/Famyl2j88FR3YHJsm3jTNtje7bdzymn5vVQ9LsFoGm30oQ/w27Ei1Mubp76UZIar6EMfqs/JbOu1jwKNypD7K/f5UGkHrkgfhY4mZCu1tp062B7ut1V5KpS9sY5l3W1c9lYQ2lK9P1s7J7m2e7P7b9u8pK5+f5K7d3Q8r8Gv1fYQw0AAAAASUVORK5CYII=" alt="QRIS"><h2>Total: ${money(total)}</h2><div class="hint">Setelah membayar, upload bukti pembayaran. Kasir akan memeriksa bukti sebelum order diteruskan ke dapur.</div><div class="proof"><input id="proof" type="file" accept="image/jpeg,image/png,image/webp"><button class="green" style="margin-top:8px" onclick="uploadProof('${id}')">Upload Bukti Pembayaran</button></div><div id="proofmsg"></div>`}
+async function uploadProof(id){const f=$('proof')?.files?.[0];if(!f)return alert('Pilih bukti pembayaran terlebih dahulu.');if(f.size>5*1024*1024)return alert('Ukuran bukti maksimal 5 MB.');try{$('proofmsg').innerHTML='<div class="hint">Mengupload bukti...</div>';const ext=f.type==='image/png'?'png':f.type==='image/webp'?'webp':'jpg',path='orders/'+id+'-'+Date.now()+'.'+ext,r=await fetch(`${URL}/storage/v1/object/${PAYBUCKET}/${path}`,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':f.type,'x-upsert':'false'},body:f}),txt=await r.text();if(!r.ok)throw Error(txt);const publicUrl=`${URL}/storage/v1/object/public/${PAYBUCKET}/${path}`;await api('/rest/v1/rpc/submit_payment_proof',{method:'POST',body:JSON.stringify({p_order_id:id,p_proof_url:publicUrl})});$('proofmsg').innerHTML='<div class="ok">✓ Bukti pembayaran sudah diterima. Kasir akan memverifikasi sebelum pesanan diproses.</div>'}catch(e){$('proofmsg').innerHTML=`<div class="err">Upload gagal: ${esc(e.message)}</div>`}}
+start();
+</script>
+</body>
+</html>
