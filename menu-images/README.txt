@@ -1,0 +1,1 @@
+Steak images are sourced from Supabase products.image_url. Keep image object-fit: contain and use a reduced visual scale so side items such as iced tea remain visible.
