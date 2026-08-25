@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-store"><title>ISSHO CAFE — KASIR LIVE</title>
+<style>
+html,body{margin:0;height:100%;background:#0b0b0b;color:#fff;font-family:Arial,sans-serif}#kasir{width:100%;height:100%;border:0;display:block}.progress{margin-top:10px;padding:10px 12px;border:1px solid #444;border-radius:10px;background:#181818;font-size:14px;font-weight:800}.progress .p{display:inline-block;padding:6px 9px;border-radius:999px;margin:3px 5px 0 0;background:#292929}.progress .done{background:#174f31;color:#9cffbd}.progress .wait{background:#4b3617;color:#ffd27a}.progress .none{background:#292929;color:#999}.livebar{position:fixed;right:12px;top:12px;z-index:2147483647;background:#173f28;border:1px solid #2f8b59;color:#a8ffc6;border-radius:10px;padding:9px 12px;font-weight:900;box-shadow:0 4px 18px #0008}
+</style></head>
+<body>
+<div class="livebar">● PROGRESS DAPUR LIVE</div>
+<iframe id="kasir" src="/staff-v6.html?v=20260825-kitchen-sync-v1" title="ISSHO CAFE KASIR"></iframe>
+<script>
+const f=document.getElementById('kasir');
+function isDrink(i){const c=String(i.category_name||'').trim().toLowerCase();return c.includes('minum')||c.includes('kopi')||c.includes('wedang')||c.includes('alkohol')}
+function progressHtml(o){const items=Array.isArray(o.items)?o.items:[];const food=items.filter(i=>!isDrink(i));const drink=items.filter(i=>isDrink(i));const state=(has,done,label,icon)=>!has?`<span class="p none">${icon} ${label}: —</span>`:done?`<span class="p done">${icon} ${label}: ✓ SELESAI</span>`:`<span class="p wait">${icon} ${label}: ⏳ DIPROSES</span>`;return `<div class="progress"><b>PROGRESS DAPUR</b><br>${state(food.length,!!o.food_completed,'Makanan','🍽️')}${state(drink.length,!!o.drink_completed,'Minuman','🥤')}</div>`}
+function patch(){try{const w=f.contentWindow,d=w.document,orders=d.querySelectorAll('.order');const data=Array.isArray(w.ORD)?w.ORD:[];orders.forEach((el,i)=>{const o=data[i];if(!o)return;let p=el.querySelector('.kitchen-progress-live');if(!p){p=d.createElement('div');p.className='kitchen-progress-live';el.appendChild(p)}p.innerHTML=progressHtml(o)});return true}catch(e){return false}}
+function refresh(){try{if(f.contentWindow&&typeof f.contentWindow.loadOrders==='function')f.contentWindow.loadOrders()}catch(e){}patch()}
+f.addEventListener('load',()=>{let n=0;const t=setInterval(()=>{patch();if(++n>80)clearInterval(t)},250)});
+setInterval(refresh,2500);setInterval(patch,700);
+</script></body></html>
