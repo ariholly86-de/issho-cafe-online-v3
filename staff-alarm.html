@@ -15,15 +15,15 @@ html,body{margin:0;height:100%;background:#0b0b0b;color:#fff;font-family:Arial,s
 <div id="alarm"><div class="box"><h2>🔔 ORDER MASUK & SUDAH DIBAYAR</h2><div id="alarmInfo" class="info"></div><button id="ack">✓ SUDAH DILIHAT</button><div class="hint">Alarm akan berhenti setelah ditekan.</div></div></div>
 <script>
 const f=document.getElementById('kasir'),alarm=document.getElementById('alarm'),info=document.getElementById('alarmInfo'),ack=document.getElementById('ack');
-let audioCtx=null,lastIds=new Set(),ready=false,shown=false;
+let audioCtx=null,lastIds=new Set(),shown=false;
+function inner(){try{const u=f.contentWindow;return u.document.getElementById('kasir')?.contentWindow||null}catch(e){return null}}
 function unlockAudio(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}catch(e){}}
-function beep(){try{unlockAudio();if(!audioCtx)return;const now=audioCtx.currentTime;for(let i=0;i<4;i++){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='square';o.frequency.value=i%2?1046:784;g.gain.setValueAtTime(.0001,now+i*.24);g.gain.exponentialRampToValueAtTime(.18,now+i*.24+.03);g.gain.exponentialRampToValueAtTime(.0001,now+i*.24+.18);o.connect(g);g.connect(audioCtx.destination);o.start(now+i*.24);o.stop(now+i*.24+.2)}}catch(e){}}
+function beep(){try{unlockAudio();if(!audioCtx)return;const now=audioCtx.currentTime;for(let i=0;i<6;i++){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='square';o.frequency.value=i%2?1046:784;g.gain.setValueAtTime(.0001,now+i*.24);g.gain.exponentialRampToValueAtTime(.18,now+i*.24+.03);g.gain.exponentialRampToValueAtTime(.0001,now+i*.24+.18);o.connect(g);g.connect(audioCtx.destination);o.start(now+i*.24);o.stop(now+i*.24+.2)}}catch(e){}}
 function show(o){shown=true;info.innerHTML='<b>'+esc(o.order_number||'-')+'</b><br><span class="q">Meja '+esc(o.table_name||'Take Away')+'</span><span class="q">'+esc(o.payment_method||'-')+'</span><span class="q">'+esc(o.payment_status||'-')+'</span><br><b>Rp '+new Intl.NumberFormat('id-ID').format(Number(o.total)||0)+'</b><br><br>'+(o.items||[]).map(i=>esc(i.name)+' × '+Number(i.qty||0)).join('<br>');alarm.style.display='flex';beep();try{if(navigator.vibrate)navigator.vibrate([300,100,300,100,300,100,500])}catch(e){}}
 function esc(s){return String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]))}
 ack.onclick=()=>{alarm.style.display='none';shown=false;unlockAudio()};
 document.addEventListener('pointerdown',unlockAudio,{once:true});
-function patch(){try{const w=f.contentWindow;if(!w||!w.document)return false;w.notifyNewPayment=function(){};return true}catch(e){return false}}
-async function poll(){try{const w=f.contentWindow;if(!w||!w.ORD||typeof w.loadOrders!=='function')return;if(w.document.getElementById('app')?.className==='hidden')return;patch();await w.loadOrders();const paid=(w.ORD||[]).filter(o=>o.payment_status==='PAID'&&o.order_status==='NEW');for(const o of paid){if(!lastIds.has(String(o.id))){lastIds.add(String(o.id));if(!shown)show(o)}}}catch(e){}}
-f.addEventListener('load',()=>{patch();setTimeout(patch,500);setTimeout(()=>{ready=true;poll()},1200);setInterval(poll,4000)});
+async function poll(){try{const w=inner();if(!w||!w.ORD||typeof w.loadOrders!=='function')return;if(w.document.getElementById('app')?.className==='hidden')return;w.notifyNewPayment=function(){};await w.loadOrders();const paid=(w.ORD||[]).filter(o=>o.payment_status==='PAID'&&o.order_status==='NEW');for(const o of paid){if(!lastIds.has(String(o.id))){lastIds.add(String(o.id));if(!shown)show(o)}}}catch(e){}}
+f.addEventListener('load',()=>{setTimeout(poll,1500);setInterval(poll,4000)});
 </script>
 </body></html>
