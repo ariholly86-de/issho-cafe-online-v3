@@ -1,0 +1,16 @@
+(()=>{
+'use strict';
+let audioCtx=null, repeatTimer=null, speechTimer=null, lastAt=0;
+const A=()=>document.getElementById('alarm');
+function unlockAudio(){try{audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume();}catch(e){}}
+function tone(){try{unlockAudio();if(!audioCtx)return;const now=audioCtx.currentTime;for(let i=0;i<16;i++){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='square';o.frequency.setValueAtTime(i%2?1250:760,now+i*.14);g.gain.setValueAtTime(.0001,now+i*.14);g.gain.exponentialRampToValueAtTime(.82,now+i*.14+.015);g.gain.exponentialRampToValueAtTime(.0001,now+i*.14+.105);o.connect(g);g.connect(audioCtx.destination);o.start(now+i*.14);o.stop(now+i*.14+.12)}}catch(e){}}
+function speak(){try{if(!('speechSynthesis' in window))return;window.speechSynthesis.cancel();const t=document.getElementById('alarmInfo')?.innerText||'Ada order baru masuk. Segera periksa kasir.';const u=new SpeechSynthesisUtterance('PERHATIAN. '+t.replace(/\n+/g,'. '));u.lang='id-ID';u.rate=.9;u.pitch=1.05;u.volume=1;window.speechSynthesis.speak(u);}catch(e){}}
+function flash(on){document.documentElement.classList.toggle('loud-alarm',!!on);}
+function notify(){try{if('Notification' in window&&Notification.permission==='granted'){new Notification('🔔 ISSHO CAFE — ORDER MASUK',{body:document.getElementById('alarmInfo')?.innerText||'Ada order baru.'});}}catch(e){}}
+function start(){if(Date.now()-lastAt<700)return;lastAt=Date.now();unlockAudio();flash(true);tone();speak();notify();clearInterval(repeatTimer);clearInterval(speechTimer);repeatTimer=setInterval(()=>{if(A()?.style.display!=='none'){tone();try{navigator.vibrate?.([600,120,600,120,600,120,900]);}catch(e){}}else stop();},4500);speechTimer=setInterval(()=>{if(A()?.style.display!=='none')speak();else clearInterval(speechTimer);},9000);}
+function stop(){clearInterval(repeatTimer);clearInterval(speechTimer);repeatTimer=null;speechTimer=null;flash(false);try{window.speechSynthesis?.cancel();}catch(e){}}
+const style=document.createElement('style');style.textContent=`@keyframes loudFlash{0%,100%{filter:none}50%{filter:brightness(1.8)}}html.loud-alarm body{animation:loudFlash .65s steps(2,end) infinite}#alarm.loud-visible:before{content:'🔔  ORDER BARU — SEGERA DITANGANI';position:fixed;top:0;left:0;right:0;background:#d52f2f;color:#fff;text-align:center;font:900 24px Arial;padding:14px;z-index:2147483647;box-shadow:0 0 25px #f00}#alarm.loud-visible .box,#alarm.loud-visible .alarmbox{border-color:#ff3333!important;box-shadow:0 0 35px #ff2222,0 0 80px #ff2222!important}`;document.head.appendChild(style);
+const mo=new MutationObserver(()=>{const a=A();if(!a)return;const visible=getComputedStyle(a).display!=='none';a.classList.toggle('loud-visible',visible);if(visible&&!a.dataset.loudStarted){a.dataset.loudStarted='1';start();}if(!visible&&a.dataset.loudStarted){delete a.dataset.loudStarted;stop();}});mo.observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['style','class']});
+document.addEventListener('pointerdown',()=>{unlockAudio();try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();}catch(e){}},{once:false,passive:true});
+window.addEventListener('beforeunload',stop);
+})();
