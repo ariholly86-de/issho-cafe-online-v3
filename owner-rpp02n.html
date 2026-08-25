@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>ISSHO CAFE — OWNER</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0b0b}iframe{width:100%;height:100%;border:0;display:block}#status{position:fixed;right:14px;bottom:14px;z-index:999999;background:#151515;color:#ddd;border:1px solid #444;border-radius:10px;padding:8px 11px;font:12px Arial;box-shadow:0 8px 25px #000;display:none}</style>
+</head>
+<body>
+<iframe id="owner" src="owner.html?v=20260825-owner-report-fix-v1" title="ISSHO CAFE OWNER"></iframe>
+<div id="status">Rekapan siap.</div>
+<script>
+const frame=document.getElementById('owner');
+const status=document.getElementById('status');
+const SUPA='https://xvhimyflrqrdudijwjdn.supabase.co';
+const KEY='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
+const esc=s=>String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
+const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
+function showStatus(t){status.textContent=t;status.style.display='block';clearTimeout(showStatus.t);showStatus.t=setTimeout(()=>status.style.display='none',2600)}
+function ownerApp(){try{return frame.contentWindow.document.getElementById('app').contentWindow}catch(e){return null}}
+function ownerPin(){const w=ownerApp();try{const p=String(w.P||'').trim();return p}catch(e){return ''}}
+function fmtDate(d){return new Intl.DateTimeFormat('id-ID',{dateStyle:'full'}).format(d)}
+function isoWib(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}T00:00:00+07:00`}
+function range(kind){const now=new Date();const base=new Date(now.getFullYear(),now.getMonth(),now.getDate());let from,to,label;
+ if(kind==='daily'){from=base;to=new Date(base);to.setDate(to.getDate()+1);label='Harian'}
+ else if(kind==='weekly'){const dow=base.getDay();const diff=dow===0?-6:1-dow;from=new Date(base);from.setDate(from.getDate()+diff);to=new Date(from);to.setDate(to.getDate()+7);label='Mingguan'}
+ else {from=new Date(base.getFullYear(),base.getMonth(),1);to=new Date(base.getFullYear(),base.getMonth()+1,1);label='Bulanan'}
+ return {from,to,label}}
+async function rpcReport(pin,from,to){const r=await fetch(SUPA+'/rest/v1/rpc/staff_sales_report',{method:'POST',cache:'no-store',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({p_pin:pin,p_from:isoWib(from),p_to:isoWib(to)})});const t=await r.text();if(!r.ok)throw Error(t||('HTTP '+r.status));return t?JSON.parse(t):null}
+function renderReport(w,kind,data,from,to){const box=w.document.getElementById('rppReportBox');if(!box)return;const fav=Array.isArray(data?.favorite_menus)?data.favorite_menus:[];box.innerHTML=`<div style="background:#151515;border:1px solid #444;border-radius:12px;padding:13px;margin-top:10px"><div style="font-weight:900;font-size:16px">📊 Rekapan ${esc(kind)}</div><div style="color:#aaa;font-size:12px;margin:4px 0 10px">${esc(fmtDate(from))} — ${esc(fmtDate(new Date(to.getTime()-86400000)))}</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px"><div style="background:#202020;border:1px solid #383838;border-radius:9px;padding:9px">Pesanan<br><b>${Number(data?.orders||0)}</b></div><div style="background:#202020;border:1px solid #383838;border-radius:9px;padding:9px">Omzet<br><b>${money(data?.revenue)}</b></div><div style="background:#202020;border:1px solid #383838;border-radius:9px;padding:9px">Cash<br><b>${money(data?.cash)}</b></div><div style="background:#202020;border:1px solid #383838;border-radius:9px;padding:9px">QRIS<br><b>${money(data?.qris)}</b></div><div style="background:#202020;border:1px solid #383838;border-radius:9px;padding:9px">Item Terjual<br><b>${Number(data?.items_sold||0)}</b></div></div><h3 style="margin-bottom:6px">Menu Terlaris</h3>${fav.length?fav.map((x,i)=>`<div style="padding:7px 0;border-bottom:1px solid #333">${i+1}. <b>${esc(x.name)}</b> — ${Number(x.qty||0)} pcs — ${money(x.revenue)}</div>`).join(''):'<div style="color:#aaa">Belum ada penjualan lunas pada periode ini.</div>'}</div>`}
+async function run(kind){const w=ownerApp();if(!w)return showStatus('Owner belum siap.');const pin=ownerPin();if(!pin)return showStatus('Silakan login Owner terlebih dahulu.');const rg=range(kind);const box=w.document.getElementById('rppReportBox');if(box)box.innerHTML='<div style="padding:10px;color:#aaa">Memuat rekapan...</div>';try{const data=await rpcReport(pin,rg.from,rg.to);renderReport(w,rg.label,data,rg.from,rg.to);showStatus('✓ Rekapan '+rg.label.toLowerCase()+' berhasil dimuat.')}catch(e){if(box)box.innerHTML='<div style="background:#4a1d1a;color:#ffd9d5;padding:10px;border-radius:9px">Gagal memuat rekapan: '+esc(e.message)+'</div>';showStatus('Rekapan gagal dimuat.')}}
+function patch(){try{const ow=frame.contentWindow;const inner=ow.document.getElementById('app');if(!inner||!inner.contentDocument)return false;const w=inner.contentWindow;const reports=w.document.getElementById('reports');if(!reports)return false;if(w.document.getElementById('rppQuickReports'))return true;const quick=w.document.createElement('div');quick.id='rppQuickReports';quick.style.cssText='background:#151515;border:1px solid #444;border-radius:12px;padding:12px;margin-bottom:12px';quick.innerHTML='<h3 style="margin:0 0 8px">⚡ Rekapan Cepat</h3><div style="display:flex;gap:7px;flex-wrap:wrap"><button type="button" id="rppDaily" class="gold">📅 Harian</button><button type="button" id="rppWeekly" class="blue">📆 Mingguan</button><button type="button" id="rppMonthly" class="green">🗓️ Bulanan</button></div><div id="rppReportBox"></div>';
+ reports.insertBefore(quick,reports.children[1]||null);
+w.document.getElementById('rppDaily').onclick=()=>run('daily');w.document.getElementById('rppWeekly').onclick=()=>run('weekly');w.document.getElementById('rppMonthly').onclick=()=>run('monthly');return true}catch(e){return false}}
+function boot(){let n=0;const t=setInterval(()=>{if(patch()||++n>240)clearInterval(t)},250);setInterval(patch,1500)}
+frame.addEventListener('load',boot);boot();
+</script>
+</body></html>
