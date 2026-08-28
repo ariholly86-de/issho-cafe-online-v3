@@ -6,6 +6,11 @@ on:
       - 'printer-bridge-android/**'
       - 'android-printer-bridge/**'
       - '.github/workflows/build-printer-bridge.yml'
+
+concurrency:
+  group: issho-printer-bridge-build
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
