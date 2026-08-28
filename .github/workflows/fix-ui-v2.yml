@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: issho-ui-fix-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -75,7 +79,9 @@ jobs:
           s = s.replace('.alarm-date{font-size:13px;color:#c9c9c9;font-weight:700;margin-bottom:8px}', '.alarm-date{font-size:13px;color:#c9c9c9;font-weight:700;margin-bottom:3px}.alarm-time{font-size:13px;color:#c9c9c9;font-weight:700;margin-bottom:8px}')
           s = s.replace('<div id="alarmDate" class="alarm-date"></div>', '<div id="alarmDate" class="alarm-date"></div><div id="alarmTime" class="alarm-time"></div>')
           pattern = r"function orderDate\(o\)\{.*?\}\nasync function api"
-          replacement = '''function orderDateTime(o){const raw=o?.created_at||o?.order_date||o?.ordered_at||o?.createdAt||o?.orderDate;if(raw){const d=new Date(raw);if(!isNaN(d))return{date:d.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Asia/Jakarta'}),time:d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'Asia/Jakarta'})}}const m=String(o?.order_number||'').match(/^ISS-(\\d{6})-(\\d{6})-/i);if(m){const ds=m[1],ts=m[2];return{date:ds.slice(4,6)+'/'+ds.slice(2,4)+'/20'+ds.slice(0,2),time:ts.slice(0,2)+':'+ts.slice(2,4)+':'+ts.slice(4,6)}}return{date:'-',time:'-'}}\nfunction orderDate(o){return orderDateTime(o).date}\nasync function api'''
+          replacement = '''function orderDateTime(o){const raw=o?.created_at||o?.order_date||o?.ordered_at||o?.createdAt||o?.orderDate;if(raw){const d=new Date(raw);if(!isNaN(d))return{date:d.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Asia/Jakarta'}),time:d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'Asia/Jakarta'})}}const m=String(o?.order_number||'').match(/^ISS-(\\d{6})-(\\d{6})-/i);if(m){const ds=m[1],ts=m[2];return{date:ds.slice(4,6)+'/'+ds.slice(2,4)+'/20'+ds.slice(0,2),time:ts.slice(0,2)+':'+ts.slice(2,4)+':'+ts.slice(4,6)}}return{date:'-',time:'-'}}
+          function orderDate(o){return orderDateTime(o).date}
+          async function api'''
           s2, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
           if n == 1:
               s = s2
