@@ -4,23 +4,36 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <title>ISSHO CAFE — OWNER</title>
-<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0b0b}iframe{width:100%;height:100%;border:0;display:block}</style>
-</head><body>
-<iframe id="owner" src="owner.html?v=20260831-owner-stable-shell" title="ISSHO CAFE OWNER"></iframe>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0b0b}
+iframe{width:100%;height:100%;border:0;display:block}
+</style>
+</head>
+<body>
+<iframe id="owner" src="/owner-v3-fixed.html?v=20260831-owner-category-click-fix" title="ISSHO CAFE OWNER"></iframe>
 <script>
 const ownerFrame=document.getElementById('owner');
-function useStableEditor(){
+function bindCategoryClicks(){
   try{
-    const appFrame=ownerFrame.contentDocument&&ownerFrame.contentDocument.getElementById('app');
-    if(!appFrame)return false;
-    if(!appFrame.dataset.stableEditor){
-      appFrame.dataset.stableEditor='1';
-      appFrame.src='/owner-v3-fixed.html?v=20260831-stable-owner';
-    }
+    const d=ownerFrame.contentDocument;
+    if(!d||!d.body)return false;
+    if(d.__categoryClickFix)return true;
+    d.__categoryClickFix=true;
+    d.addEventListener('click',function(ev){
+      const b=ev.target.closest&&ev.target.closest('#cats [data-cat]');
+      if(!b)return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      const name=b.getAttribute('data-cat')||'Semua';
+      if(typeof ownerFrame.contentWindow.CAT!=='undefined')ownerFrame.contentWindow.CAT=name;
+      if(typeof ownerFrame.contentWindow.renderProducts==='function')ownerFrame.contentWindow.renderProducts();
+    },true);
     return true;
-  }catch(e){console.warn('Stable Owner route:',e);return false}
+  }catch(e){console.warn('Owner category click fix:',e);return false}
 }
-ownerFrame.addEventListener('load',()=>{let n=0;const t=setInterval(()=>{n++;if(useStableEditor()||n>40)clearInterval(t)},250)});
+ownerFrame.addEventListener('load',()=>{let n=0;const t=setInterval(()=>{n++;if(bindCategoryClicks()||n>40)clearInterval(t)},250)});
+setTimeout(bindCategoryClicks,500);
 </script>
 <script src="/ui-standard.js?v=20260830-ui-v2"></script>
-</body></html>
+</body>
+</html>
