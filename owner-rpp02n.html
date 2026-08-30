@@ -13,11 +13,11 @@ iframe{width:100%;height:100%;border:0;display:block}
 </style>
 </head>
 <body>
-<iframe id="owner" src="owner.html?v=20260831-owner-category-sync" title="ISSHO CAFE OWNER"></iframe>
+<iframe id="owner" src="owner.html?v=20260831-owner-category-final" title="ISSHO CAFE OWNER"></iframe>
 <script>
-/* OWNER CATEGORY SYNC
-   The Owner menu/category selector now uses the same active categories
-   from Supabase as the Customer menu. Product/category data is not changed.
+/* OWNER CATEGORY FINAL SYNC
+   Uses the same active category source and ordering as Customer.
+   Category clicks filter by the real product.category_id, not by product-name guessing.
 */
 const SUPA='https://xvhimyflrqrdudijwjdn.supabase.co';
 const KEY='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
@@ -34,22 +34,29 @@ async function installOwnerCategorySync(){
         const ad=appFrame.contentDocument;
         if(!ad||!ad.body)return;
 
-        const r=await fetch(SUPA+'/rest/v1/categories?select=id,name,active,sort_order&active=eq.true&order=sort_order,name',{headers:{apikey:KEY,Authorization:'Bearer '+KEY},cache:'no-store'});
-        if(!r.ok)throw new Error('Kategori gagal dimuat');
-        const dbCats=await r.json();
-        const activeCats=Array.isArray(dbCats)?dbCats.filter(c=>c.active===true):[];
+        const headers={apikey:KEY,Authorization:'Bearer '+KEY};
+        const [catResp,prodResp]=await Promise.all([
+          fetch(SUPA+'/rest/v1/categories?select=id,name,active,sort_order&active=eq.true&order=sort_order,name',{headers,cache:'no-store'}),
+          fetch(SUPA+'/rest/v1/products?select=id,category_id&active=eq.true',{headers,cache:'no-store'})
+        ]);
+        if(!catResp.ok||!prodResp.ok)throw new Error('Kategori/menu gagal dimuat');
+        const dbCats=await catResp.json();
+        const activeProducts=await prodResp.json();
+        const usedIds=new Set((Array.isArray(activeProducts)?activeProducts:[]).map(p=>String(p.category_id)));
+        const activeCats=(Array.isArray(dbCats)?dbCats:[]).filter(c=>c.active===true&&usedIds.has(String(c.id)));
 
-        /* Inject into the same iframe realm, so its existing let variables PS/CAT/MENU_FILTER remain accessible. */
         const patch=ad.createElement('script');
         patch.textContent=`(function(){
           const CUSTOMER_CATEGORIES=${JSON.stringify(activeCats)};
           window.__CUSTOMER_CATEGORIES__=CUSTOMER_CATEGORIES;
 
+          /* Real DB category mapping — identical source as Customer. */
           category=function(p){
             const c=CUSTOMER_CATEGORIES.find(x=>String(x.id)===String(p.category_id));
             return c?c.name:'Tanpa Kategori';
           };
 
+          /* Category buttons are rebuilt from the exact Customer category list. */
           cats=function(){
             const el=document.getElementById('cats');
             if(!el)return;
@@ -62,6 +69,7 @@ async function installOwnerCategorySync(){
             }));
           };
 
+          /* Every filter/category/search action uses the same render function. */
           renderProducts=function(){
             const q=(document.getElementById('menuSearch')?.value||'').trim().toLowerCase();
             let list=Array.isArray(PS)?PS.slice():[];
@@ -83,6 +91,7 @@ async function installOwnerCategorySync(){
             if(typeof setFilterButtons==='function')setFilterButtons();
             cats();
             if(!products)return;
+
             products.innerHTML=list.length?list.map(p=>'<div class="card '+(p.active===true?'stock-on':'stock-off')+'"><div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">Kategori: '+esc(category(p))+'</div></div>'+(p.active===true?'<span class="badge badge-on">AKTIF / TAMPIL</span>':'<span class="badge badge-off">STOK KOSONG / UNCHECK</span>')+'</div>'+(p.image_url?'<img class="thumb" src="'+esc(p.image_url)+'" alt="'+esc(p.name)+'">':'<div class="thumb" style="display:grid;place-items:center;color:#777">Belum ada gambar</div>')+'<input id="n-'+p.id+'" value="'+esc(p.name)+'" placeholder="Nama menu"><input id="p-'+p.id+'" type="number" min="0" value="'+p.price+'" placeholder="Harga"><input id="d-'+p.id+'" value="'+esc(p.description||'')+'" placeholder="Deskripsi"><label style="display:flex;gap:8px;align-items:center;margin-top:5px"><input id="a-'+p.id+'" type="checkbox" '+(p.active===true?'checked':'')+' onchange="toggleActive(\\''+p.id+'\\',this.checked)"><span>Aktifkan & Tampilkan</span></label><div class="actions"><button class="gold" type="button" onclick="saveProduct(\\''+p.id+'\\')">💾 Simpan</button></div></div>').join(''):'<div class="card empty">Tidak ada menu pada kategori/filter ini.</div>';
           };
 
