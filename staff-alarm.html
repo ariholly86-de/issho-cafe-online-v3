@@ -43,5 +43,5 @@ async function poll(){try{const p=getPin();if(!p)return;const list=await api('/r
 function start(){if(started)return;started=true;setTimeout(poll,300);setInterval(poll,1000);setInterval(inject,1000);try{if('Notification'in window&&Notification.permission==='default'&&!permissionAsked){permissionAsked=true;Notification.requestPermission().catch(()=>{})}}catch(e){}}
 document.addEventListener('pointerdown',()=>{unlock();if(!started)start()},{passive:true});window.addEventListener('focus',()=>{unlock();if(!started)start()});$('kasir').addEventListener('load',()=>{setTimeout(start,300);setTimeout(inject,800);setTimeout(refreshInner,1200)});setTimeout(start,800);setInterval(inject,2000);
 </script>
-<script src="/ui-standard.js?v=20260830-ui-v1"></script></body>
+<script src="/ui-standard.js?v=20260830-ui-v2"></script></body>
 </html>
