@@ -1,112 +1,21 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <title>ISSHO CAFE — OWNER</title>
-<style>
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0b0b}
-iframe{width:100%;height:100%;border:0;display:block}
-</style>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0b0b}iframe{width:100%;height:100%;border:0;display:block}</style>
 </head>
 <body>
 <iframe id="owner" src="owner.html?v=20260831-owner-category-final" title="ISSHO CAFE OWNER"></iframe>
 <script>
-/* OWNER CATEGORY FINAL SYNC
-   Uses the same active category source and ordering as Customer.
-   Category clicks filter by the real product.category_id, not by product-name guessing.
-*/
 const SUPA='https://xvhimyflrqrdudijwjdn.supabase.co';
 const KEY='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
 const ownerFrame=document.getElementById('owner');
-
-async function installOwnerCategorySync(){
-  try{
-    const d=ownerFrame.contentDocument;
-    const appFrame=d&&d.getElementById('app');
-    if(!appFrame)return;
-
-    const install=async()=>{
-      try{
-        const ad=appFrame.contentDocument;
-        if(!ad||!ad.body)return;
-
-        const headers={apikey:KEY,Authorization:'Bearer '+KEY};
-        const [catResp,prodResp]=await Promise.all([
-          fetch(SUPA+'/rest/v1/categories?select=id,name,active,sort_order&active=eq.true&order=sort_order,name',{headers,cache:'no-store'}),
-          fetch(SUPA+'/rest/v1/products?select=id,category_id&active=eq.true',{headers,cache:'no-store'})
-        ]);
-        if(!catResp.ok||!prodResp.ok)throw new Error('Kategori/menu gagal dimuat');
-        const dbCats=await catResp.json();
-        const activeProducts=await prodResp.json();
-        const usedIds=new Set((Array.isArray(activeProducts)?activeProducts:[]).map(p=>String(p.category_id)));
-        const activeCats=(Array.isArray(dbCats)?dbCats:[]).filter(c=>c.active===true&&usedIds.has(String(c.id)));
-
-        const patch=ad.createElement('script');
-        patch.textContent=`(function(){
-          const CUSTOMER_CATEGORIES=${JSON.stringify(activeCats)};
-          window.__CUSTOMER_CATEGORIES__=CUSTOMER_CATEGORIES;
-
-          /* Real DB category mapping — identical source as Customer. */
-          category=function(p){
-            const c=CUSTOMER_CATEGORIES.find(x=>String(x.id)===String(p.category_id));
-            return c?c.name:'Tanpa Kategori';
-          };
-
-          /* Category buttons are rebuilt from the exact Customer category list. */
-          cats=function(){
-            const el=document.getElementById('cats');
-            if(!el)return;
-            const names=['Semua',...CUSTOMER_CATEGORIES.map(c=>c.name)];
-            if(!names.includes(CAT))CAT='Semua';
-            el.innerHTML=names.map(c=>'<button type="button" class="'+(CAT===c?'gold':'dark')+'" data-owner-category="'+esc(c)+'">'+esc(c)+'</button>').join('');
-            el.querySelectorAll('[data-owner-category]').forEach(btn=>btn.addEventListener('click',function(){
-              CAT=btn.getAttribute('data-owner-category')||'Semua';
-              renderProducts();
-            }));
-          };
-
-          /* Every filter/category/search action uses the same render function. */
-          renderProducts=function(){
-            const q=(document.getElementById('menuSearch')?.value||'').trim().toLowerCase();
-            let list=Array.isArray(PS)?PS.slice():[];
-            if(CAT!=='Semua'){
-              const c=CUSTOMER_CATEGORIES.find(x=>x.name===CAT);
-              list=c?list.filter(p=>String(p.category_id)===String(c.id)):[];
-            }
-            if(MENU_FILTER==='off')list=list.filter(p=>p.active!==true);
-            if(MENU_FILTER==='on')list=list.filter(p=>p.active===true);
-            if(MENU_FILTER==='noimg')list=list.filter(p=>!p.image_url||!String(p.image_url).trim());
-            if(q)list=list.filter(p=>(p.name+' '+(p.description||'')).toLowerCase().includes(q));
-
-            const statAll=document.getElementById('statAll'),statOff=document.getElementById('statOff'),statOn=document.getElementById('statOn'),count=document.getElementById('menuCount'),products=document.getElementById('products');
-            const off=PS.filter(p=>p.active!==true).length,on=PS.filter(p=>p.active===true).length;
-            if(statAll)statAll.textContent='Semua: '+PS.length;
-            if(statOff)statOff.textContent='Stok kosong/uncheck: '+off;
-            if(statOn)statOn.textContent='Aktif/tampil: '+on;
-            if(count)count.textContent='Menampilkan '+list.length+' menu dari '+PS.length+' menu yang tersimpan di Owner.';
-            if(typeof setFilterButtons==='function')setFilterButtons();
-            cats();
-            if(!products)return;
-
-            products.innerHTML=list.length?list.map(p=>'<div class="card '+(p.active===true?'stock-on':'stock-off')+'"><div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">Kategori: '+esc(category(p))+'</div></div>'+(p.active===true?'<span class="badge badge-on">AKTIF / TAMPIL</span>':'<span class="badge badge-off">STOK KOSONG / UNCHECK</span>')+'</div>'+(p.image_url?'<img class="thumb" src="'+esc(p.image_url)+'" alt="'+esc(p.name)+'">':'<div class="thumb" style="display:grid;place-items:center;color:#777">Belum ada gambar</div>')+'<input id="n-'+p.id+'" value="'+esc(p.name)+'" placeholder="Nama menu"><input id="p-'+p.id+'" type="number" min="0" value="'+p.price+'" placeholder="Harga"><input id="d-'+p.id+'" value="'+esc(p.description||'')+'" placeholder="Deskripsi"><label style="display:flex;gap:8px;align-items:center;margin-top:5px"><input id="a-'+p.id+'" type="checkbox" '+(p.active===true?'checked':'')+' onchange="toggleActive(\\''+p.id+'\\',this.checked)"><span>Aktifkan & Tampilkan</span></label><div class="actions"><button class="gold" type="button" onclick="saveProduct(\\''+p.id+'\\')">💾 Simpan</button></div></div>').join(''):'<div class="card empty">Tidak ada menu pada kategori/filter ini.</div>';
-          };
-
-          cats();
-          renderProducts();
-        })();`;
-        ad.body.appendChild(patch);
-      }catch(e){console.warn('Owner category patch:',e)}
-    };
-
-    if(appFrame.contentDocument&&appFrame.contentDocument.readyState==='complete')await install();
-    else appFrame.addEventListener('load',install,{once:true});
-  }catch(e){console.warn('Owner category wrapper:',e)}
-}
-ownerFrame.addEventListener('load',installOwnerCategorySync,{once:true});
+async function getDBCategories(){const r=await fetch(SUPA+'/rest/v1/categories?select=id,name,active,sort_order&active=eq.true&order=sort_order,name',{headers:{apikey:KEY,Authorization:'Bearer '+KEY},cache:'no-store'});if(!r.ok)throw new Error('Kategori gagal dimuat');return await r.json()}
+function patchOwnerApp(){const od=ownerFrame.contentDocument,appFrame=od&&od.getElementById('app');if(!appFrame)return false;const ad=appFrame.contentDocument;if(!ad||!ad.body)return false;(async()=>{try{const raw=await getDBCategories(),DB_CATS=(Array.isArray(raw)?raw:[]).filter(c=>c.active===true);const s=ad.createElement('script');s.textContent=`(function(){const DB_CATS=${JSON.stringify(DB_CATS)};window.__OWNER_DB_CATEGORIES__=DB_CATS;function catName(p){const c=DB_CATS.find(x=>String(x.id)===String(p.category_id));return c?c.name:'Tanpa Kategori'}category=catName;cats=function(){const el=document.getElementById('cats');if(!el)return;const names=['Semua'].concat(DB_CATS.map(c=>c.name));if(!names.includes(CAT))CAT='Semua';el.innerHTML=names.map(c=>'<button type="button" class="'+(CAT===c?'gold':'dark')+'" data-owner-cat="'+esc(c)+'">'+esc(c)+'</button>').join('');el.querySelectorAll('[data-owner-cat]').forEach(b=>b.onclick=function(){CAT=b.getAttribute('data-owner-cat')||'Semua';renderProducts();document.getElementById('products')?.scrollIntoView({block:'start',behavior:'smooth'})})};renderProducts=function(){const q=(document.getElementById('menuSearch')?.value||'').trim().toLowerCase();let list=Array.isArray(PS)?PS.slice():[];if(CAT!=='Semua'){const c=DB_CATS.find(x=>x.name===CAT);list=c?list.filter(p=>String(p.category_id)===String(c.id)):[]}if(MENU_FILTER==='off')list=list.filter(p=>p.active!==true);if(MENU_FILTER==='on')list=list.filter(p=>p.active===true);if(MENU_FILTER==='noimg')list=list.filter(p=>!p.image_url||!String(p.image_url).trim());if(q)list=list.filter(p=>(p.name+' '+(p.description||'')).toLowerCase().includes(q));const products=document.getElementById('products');const count=document.getElementById('menuCount');const all=document.getElementById('statAll'),off=document.getElementById('statOff'),on=document.getElementById('statOn');if(all)all.textContent='Semua: '+PS.length;if(off)off.textContent='Stok kosong/uncheck: '+PS.filter(p=>p.active!==true).length;if(on)on.textContent='Aktif/tampil: '+PS.filter(p=>p.active===true).length;if(count)count.textContent='Menampilkan '+list.length+' menu dari '+PS.length+' menu yang tersimpan di Owner.';if(typeof setFilterButtons==='function')setFilterButtons();cats();if(!products)return;products.innerHTML=list.length?list.map(p=>'<div class="card '+(p.active===true?'stock-on':'stock-off')+'"><div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">Kategori: '+esc(catName(p))+'</div></div>'+(p.active===true?'<span class="badge badge-on">AKTIF / TAMPIL</span>':'<span class="badge badge-off">STOK KOSONG / UNCHECK</span>')+'</div>'+(p.image_url?'<img class="thumb" src="'+esc(p.image_url)+'" alt="'+esc(p.name)+'">':'<div class="thumb" style="display:grid;place-items:center;color:#777">Belum ada gambar</div>')+'<input id="n-'+p.id+'" value="'+esc(p.name)+'" placeholder="Nama menu"><input id="p-'+p.id+'" type="number" min="0" value="'+p.price+'" placeholder="Harga"><input id="d-'+p.id+'" value="'+esc(p.description||'')+'" placeholder="Deskripsi"><label style="display:flex;gap:8px;align-items:center;margin-top:5px"><input id="a-'+p.id+'" type="checkbox" '+(p.active===true?'checked':'')+' onchange="toggleActive(\\''+p.id+'\\',this.checked)"><span>Aktifkan & Tampilkan</span></label><div class="actions"><button class="gold" type="button" onclick="saveProduct(\\''+p.id+'\\')">💾 Simpan</button></div></div>').join(''):'<div class="card empty">Tidak ada menu pada kategori/filter ini.</div>};cats();renderProducts()})();`;ad.body.appendChild(s);const st=ad.createElement('style');st.textContent='#products{gap:9px!important}#products>.card{padding:9px!important;margin:0!important}#products .thumb{height:105px!important;min-height:105px!important;margin:4px 0!important;object-fit:contain!important}#products input{padding:8px!important;margin:3px 0!important;min-height:34px!important;font-size:13px!important}#products .actions{margin-top:4px!important}#products .actions button{min-height:36px!important;padding:7px 10px!important}#cats{gap:5px!important;padding:4px 0!important}#cats button{min-height:34px!important;padding:6px 10px!important;font-size:13px!important}';ad.head.appendChild(st)}catch(e){console.warn('Owner category/editor patch',e)}})();return true}
+function startPatch(){let n=0;const t=setInterval(()=>{n++;try{if(patchOwnerApp())clearInterval(t)}catch(e){}if(n>40)clearInterval(t)},500)}
+ownerFrame.addEventListener('load',startPatch);startPatch();
 </script>
 <script src="/ui-standard.js?v=20260830-ui-v2"></script>
 </body>
