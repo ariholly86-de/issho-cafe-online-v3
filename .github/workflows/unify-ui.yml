@@ -1,0 +1,58 @@
+name: ISSHO CAFE - Unify UI
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  unify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Normalize all public screens
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          pages = [
+            'staff-alarm.html',
+            'dapur-v8.html',
+            'owner-rpp02n.html',
+            'customer.html',
+            'qr-meja.html',
+            'stock-v2.html',
+          ]
+          script = '<script src="/ui-standard.js?v=20260830-ui-v1"></script>'
+          for name in pages:
+              p=Path(name)
+              if not p.exists():
+                  continue
+              s=p.read_text(encoding='utf-8')
+              # Every entry point is explicitly Indonesian and gets the same responsive normalization.
+              s=s.replace('<html>', '<html lang="id">', 1)
+              if '<html lang=' in s:
+                  import re
+                  s=re.sub(r'<html\s+lang=["\'][^"\']*["\']', '<html lang="id"', s, count=1, flags=re.I)
+              if script not in s:
+                  s=s.replace('</body>', script+'</body>', 1)
+              p.write_text(s,encoding='utf-8')
+
+          # Internal navigation must always open the current production entry points,
+          # not older v3/v7 snapshots which can have different language/layout.
+          p=Path('stock-v2.html')
+          if p.exists():
+              s=p.read_text(encoding='utf-8')
+              s=s.replace('/customer-v3.html','/customer.html')
+              s=s.replace('/dapur-v7.html','/dapur-v8.html')
+              p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit normalization
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add staff-alarm.html dapur-v8.html owner-rpp02n.html customer.html qr-meja.html stock-v2.html ui-standard.js
+          git diff --cached --quiet && exit 0
+          git commit -m "Unify ISSHO CAFE UI across devices"
+          git push
