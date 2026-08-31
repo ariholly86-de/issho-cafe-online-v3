@@ -12,7 +12,7 @@
 const S='https://xvhimyflrqrdudijwjdn.supabase.co',K='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
 const f=document.getElementById('owner'),topBtn=document.getElementById('restore'),modal=document.getElementById('modal'),listEl=document.getElementById('list'),searchEl=document.getElementById('search'),bulkBtn=document.getElementById('bulk'),msgEl=document.getElementById('modalMsg'),statusEl=document.getElementById('status');
 let hiddenMenus=[],selected=new Set(),loading=false;
-const esc=s=>String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
+const esc=s=>String(s??'').replace(/[&<>\\\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\\"':'&quot;',"'":'&#39;'}[m]));
 const say=x=>{statusEl.textContent=x;statusEl.style.display='block';clearTimeout(say.t);say.t=setTimeout(()=>statusEl.style.display='none',3500)};
 const iw=()=>f.contentWindow;const pin=()=>{try{return iw().document.getElementById('pin')?.value?.trim()||''}catch(e){return''}};
 async function rpc(path,body){const r=await fetch(S+path,{method:'POST',cache:'no-store',headers:{apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},body:JSON.stringify(body)}),t=await r.text();if(!r.ok)throw Error(t||('HTTP '+r.status));return t?JSON.parse(t):null}
@@ -28,4 +28,4 @@ function closeModal(){modal.style.display='none'}
 async function restoreSelected(){const p=pin();if(!p)return say('Silakan login Owner terlebih dahulu.');const ids=[...selected];if(!ids.length)return say('Pilih minimal satu menu.');bulkBtn.disabled=true;bulkBtn.textContent='⏳ MEMULIHKAN '+ids.length+' MENU...';try{const d=await rpc('/rest/v1/rpc/owner_restore_selected_products',{p_owner_pin:p,p_product_ids:ids});say('✓ '+(d?.message||ids.length+' menu berhasil dipulihkan.'));selected.clear();updateCount();await loadHidden();try{if(typeof iw().loadProducts==='function')await iw().loadProducts()}catch(e){}setTimeout(()=>{try{iw().location.reload()}catch(e){}},250)}catch(e){say('Gagal memulihkan: '+e.message);msgEl.innerHTML='<span style="color:#ffb4ad">Gagal: '+esc(e.message)+'</span>'}finally{bulkBtn.disabled=false;updateCount()}}
 topBtn.addEventListener('click',openModal);modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});setInterval(refreshData,5000);f.addEventListener('load',()=>{setTimeout(refreshData,1000);setTimeout(refreshData,3000)});updateCount();
 </script>
-<script src="/ui-standard.js?v=20260830-ui-v2"></script></body></html>
+<script src="/ui-standard.js?v=20260831-ui-v3"></script></body></html>
