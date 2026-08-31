@@ -60,8 +60,9 @@
 
   function allDocs(){
     const out=[document];
+    try{if(window.parent&&window.parent!==window&&window.parent.document)out.push(window.parent.document)}catch(e){}
     try{const f=document.getElementById('owner');if(f&&f.contentDocument)out.push(f.contentDocument)}catch(e){}
-    return out;
+    return [...new Set(out)];
   }
 
   function findRestoreButton(d){
@@ -107,7 +108,7 @@
       const buttons=[...(parentButton?[parentButton]:[]),...d.querySelectorAll('button')].filter((b,i,a)=>a.indexOf(b)===i && (b===parentButton || /PULIHKAN MENU TERPILIH/i.test(String(b.textContent||''))));
       const cards=[...d.querySelectorAll('#products .card')];
       for(const card of cards){
-        if(card.dataset.isshoRestoreReady)return;
+        if(card.dataset.isshoRestoreReady)continue;
         const checkbox=card.querySelector('input[type="checkbox"][id^="a-"]');
         const status=card.querySelector('.badge-off');
         if(!checkbox||!status)continue;
