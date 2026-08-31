@@ -1,30 +1,28 @@
-/* ISSHO CAFE — UI Standard v1.7 — Owner restore only + compact proof */
+/* ISSHO CAFE — UI Standard v1.8 — Owner restore interaction fix */
 (function(){
 'use strict';
-/* Canonical Owner wrapper already owns the restore button and modal.
-   Do not attach a second restore handler to #restore. */
-const isCanonicalOwner=document.getElementById('restore');
+const isCanonicalOwner=!!document.getElementById('restore');
 const isOwner=/owner-rpp02n|OWNER/i.test(location.pathname+' '+document.title)||!!document.getElementById('owner');
 const isKasir=/staff-printer-universal|staff-v6|staff-alarm/i.test(location.pathname)||/KASIR/i.test(document.title)||!!document.getElementById('kasir');
 function removeRestoreControls(){
-  document.querySelectorAll('button,a,[role="button"]').forEach(el=>{
-    const t=(el.textContent||'').replace(/\s+/g,' ').trim();
-    if(/PULIHKAN MENU/i.test(t)) el.remove();
-  });
+  document.querySelectorAll('button,a,[role="button"]').forEach(el=>{const t=(el.textContent||'').replace(/\s+/g,' ').trim();if(/PULIHKAN MENU/i.test(t))el.remove()});
   const s=document.getElementById('issho-ui-standard');if(s)s.remove();
   const old=document.getElementById('isshoRestoreButton');if(old)old.remove();
 }
-/* Kasir, Pelanggan, and Dapur must NEVER receive Owner restore controls. */
-if(!isOwner || isKasir){
-  removeRestoreControls();
-  setInterval(removeRestoreControls,500);
-  return;
-}
-/* The canonical Owner wrapper (owner-rpp02n.html) has its own tested
-   modal + Supabase RPC flow. Leave that button completely untouched. */
+/* Canonical Owner wrapper: harden the restore button and the dynamic menu checkboxes. */
 if(isCanonicalOwner){
+  const safety=()=>{const b=document.getElementById('restore');if(!b)return;b.disabled=false;b.style.pointerEvents='auto';b.style.position='relative';b.style.zIndex='2147483647'};
+  safety();
+  document.addEventListener('click',e=>{
+    const b=e.target.closest?.('#restore');
+    if(b){e.preventDefault();e.stopImmediatePropagation();const m=document.getElementById('modal');if(m){m.style.display='block';const s=document.getElementById('search');if(s)s.value='';if(typeof selected!=='undefined')selected.clear();if(typeof updateCount==='function')updateCount();if(typeof loadHidden==='function')Promise.resolve(loadHidden()).catch(()=>{})}return}
+    const x=e.target.closest?.('#list input[type="checkbox"][data-id]');if(x){x.disabled=false;x.style.pointerEvents='auto'}
+  },true);
+  document.addEventListener('change',e=>{const x=e.target;if(x instanceof HTMLInputElement&&x.matches('#list input[type="checkbox"][data-id]')){const id=x.getAttribute('data-id');if(id&&typeof toggleOne==='function')toggleOne(id,x.checked)}},true);
+  setInterval(safety,500);
   return;
 }
+if(!isOwner||isKasir){removeRestoreControls();setInterval(removeRestoreControls,500);return;}
 const U='https://xvhimyflrqrdudijwjdn.supabase.co',K='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
 const css=document.createElement('style');css.id='issho-ui-standard';css.textContent=`*,*::before,*::after{box-sizing:border-box}img,video,canvas{max-width:100%;height:auto}.proof{width:60px!important;max-width:60px!important;height:45px!important;max-height:45px!important;object-fit:contain!important;border-radius:6px;cursor:zoom-in;display:block!important}.issho-restore-select{display:flex!important;align-items:center;gap:9px;margin:8px 0;padding:9px 10px;border:1px solid #444;border-radius:9px;background:#202020;color:#fff}.issho-restore-select input{width:22px!important;height:22px!important;margin:0!important;accent-color:#2f7d50}.issho-restore-ready{outline:2px solid #2f7d50!important}#isshoRestoreButton{position:fixed;right:14px;top:14px;z-index:2147483647;border:2px solid #fff;border-radius:12px;padding:12px 16px;background:#2f7d50;color:#fff;font-weight:900;box-shadow:0 4px 18px #000;cursor:pointer}@media(max-width:700px){#isshoRestoreButton{right:8px;top:8px;padding:10px 12px;font-size:13px}}`;(document.head||document.documentElement).appendChild(css);
 function findDoc(start){let d=start||document;for(let i=0;i<6;i++){if(d.querySelector('#products')||d.querySelector('#pin'))return d;const f=d.querySelector('iframe');if(!f||!f.contentDocument)break;d=f.contentDocument}return d}
