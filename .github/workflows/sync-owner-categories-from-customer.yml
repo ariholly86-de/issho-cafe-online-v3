@@ -1,0 +1,38 @@
+name: Sync Owner Categories From Customer
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  sync-owner-categories:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Make Owner use the same category source as Customer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('owner-rpp02n.html')
+          s = p.read_text(encoding='utf-8')
+          old = "const rows0=await rpc('/rest/v1/rpc/owner_list_categories',{p_owner_pin:pinEl.value.trim()}),rows=Array.isArray(rows0)?rows0:[];"
+          new = "const catResp=await fetch(SUPA+'/rest/v1/categories?select=id,name,active,sort_order&active=eq.true&order=sort_order,name',{cache:'no-store',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'}});if(!catResp.ok)throw Error('Gagal memuat kategori: HTTP '+catResp.status);const rows0=await catResp.json(),rows=Array.isArray(rows0)?rows0:[];"
+          if old not in s:
+              raise SystemExit('Target category loader not found; aborting without changes.')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add owner-rpp02n.html
+          git commit -m "Make Owner categories match customer catalog" || exit 0
+          git push
