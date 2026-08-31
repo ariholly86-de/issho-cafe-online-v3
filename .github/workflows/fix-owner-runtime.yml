@@ -1,0 +1,51 @@
+name: Fix Owner Runtime Script
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix-owner:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remove premature script terminator
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('owner-v3.html')
+          s = p.read_text(encoding='utf-8')
+          targets = [
+              '<script src="/ui-standard.js?v=20260830-ui-v2"></script>',
+              '<script src="/ui-standard.js?v=20260830-ui-v1"></script>',
+          ]
+          changed = False
+          for old in targets:
+              if old in s:
+                  s = s.replace(old, '')
+                  changed = True
+          if not changed:
+              print('Target already fixed or not found.')
+              raise SystemExit(0)
+          p.write_text(s, encoding='utf-8')
+          print('Fixed owner-v3.html')
+          PY
+
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add owner-v3.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Fix Owner JavaScript premature script termination"
+          git push
