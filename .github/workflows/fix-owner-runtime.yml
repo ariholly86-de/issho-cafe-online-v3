@@ -24,7 +24,6 @@ jobs:
           from pathlib import Path
           import re, urllib.request
 
-          # 1) Keep the Owner's existing safe page, only add order date/time.
           p = Path('owner-v3-safe.html')
           s = p.read_text(encoding='utf-8')
           css = '.order-date,.order-time{display:block;color:#c9c9c9;font-size:13px;font-weight:700;margin-top:4px}'
@@ -44,11 +43,10 @@ jobs:
           s = s2.replace('Sore 17:00–Close', 'Sore 17:00–24:00').replace('Seharian 07:00–Close', 'Seharian 07:00–24:00')
           p.write_text(s, encoding='utf-8')
 
-          # 2) Synchronize the current production Owner wrapper, then fix only its report click.
           live='https://issho-cafe-online-v3.vercel.app/owner-rpp02n.html?v=20260831-selected-final'
           w=urllib.request.urlopen(live, timeout=30).read().decode('utf-8')
           old="const w=iw(),b=w.document.getElementById('reports');if(b)b.scrollIntoView({behavior:'smooth'});"
-          new="const w=iw(),b=w.document.getElementById('reports');if(typeof w.tab==='function')w.tab('reports');else if(b){b.classList.remove('hidden');b.scrollIntoView({behavior:'smooth');}}"
+          new="const w=iw(),b=w.document.getElementById('reports');if(typeof w.tab==='function')w.tab('reports');else if(b){b.classList.remove('hidden');b.scrollIntoView({behavior:'smooth'});}"
           if old in w:
               w=w.replace(old,new,1)
           elif "if(typeof w.tab==='function')w.tab('reports')" not in w:
