@@ -27,4 +27,4 @@ async function detail(){const w=app(),box=w?.document.getElementById('reportBox'
 function install(){try{const w=app(),r=w?.document.getElementById('reports');if(!r)return false;if(r.dataset.restoreReports)return true;r.dataset.restoreReports='1';const a=r.querySelector('.actions');if(!a)return false;const bar=w.document.createElement('div');bar.style.cssText='display:flex;gap:7px;flex-wrap:wrap;margin:10px 0';bar.innerHTML='<b style="display:flex;align-items:center">📋 Rekapan Detail:</b><button type="button" data-m="daily">Harian</button><button type="button" data-m="weekly">Mingguan</button><button type="button" data-m="monthly">Bulanan</button>';bar.querySelectorAll('button').forEach(b=>{b.style.cssText='border:0;border-radius:9px;padding:9px 12px;background:#315b9a;color:#fff;font-weight:900;cursor:pointer';b.onclick=()=>{mode=b.dataset.m;detail()}});r.insertBefore(bar,a);return true}catch(e){return false}}
 frame.addEventListener('load',()=>{let n=0;const t=setInterval(()=>{if(install()||++n>120)clearInterval(t)},250)});setInterval(install,1500);
 </script>
-</body></html>
+<script src="/ui-standard.js?v=20260830-ui-v2"></script></body></html>
