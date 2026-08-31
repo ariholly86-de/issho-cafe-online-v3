@@ -24,13 +24,18 @@ jobs:
           s=s.replace('.proof{max-width:320px;width:100%;border-radius:10px}', '.proof{width:auto!important;max-width:120px!important;height:auto!important;max-height:150px!important;object-fit:contain!important;border-radius:7px;border:1px solid #303030;display:block;cursor:zoom-in}')
           s=s.replace('@media(max-width:700px){', '@media(max-width:700px){.proof{max-width:90px!important;max-height:120px!important}')
           p.write_text(s)
+          p=Path('owner-rpp02n.html')
+          s=p.read_text()
+          s=s.replace(".proof{width:280px!important;max-width:280px!important;height:auto!important;max-height:360px!important;object-fit:contain!important;display:block!important;margin:8px 0;border-radius:10px!important}", ".proof{width:120px!important;max-width:120px!important;height:auto!important;max-height:150px!important;object-fit:contain!important;display:block!important;margin:6px 0;border-radius:7px!important}")
+          s=s.replace("@media(max-width:700px){.proof{width:220px!important;max-width:220px!important;max-height:300px!important}}", "@media(max-width:700px){.proof{width:90px!important;max-width:90px!important;max-height:120px!important}}")
+          p.write_text(s)
           PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add owner-v3-safe.html
+          git add owner-v3-safe.html owner-rpp02n.html
           if git diff --cached --quiet; then
             echo 'Owner runtime already repaired.'
           else
-            git commit -m 'Restore Owner login and keep proof thumbnail small'
+            git commit -m 'Keep Owner login stable and proof thumbnail compact'
             git push origin HEAD:main
           fi
