@@ -1,8 +1,10 @@
-/* ISSHO CAFE — UI Standard v1.1
-   Shared browser/device normalization. Keep every public screen on one UI/language standard. */
+/* ISSHO CAFE — UI Standard v1.2
+   Shared browser/device normalization. Owner-only recovery UX is isolated below. */
 (function(){
   'use strict';
   const TZ='Asia/Jakarta';
+  const U='https://xvhimyflrqrdudijwjdn.supabase.co';
+  const K='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
   document.documentElement.lang='id';
   document.documentElement.setAttribute('data-app-locale','id-ID');
   document.documentElement.setAttribute('data-app-timezone',TZ);
@@ -20,11 +22,17 @@
       button{min-height:42px}
       input,select,textarea{min-height:42px}
     }
+    /* Requested change #1: payment proof is a compact thumbnail; its existing link still opens full size. */
+    .proof{max-width:180px!important;width:auto!important;height:120px!important;object-fit:contain!important;cursor:zoom-in}
+    /* Requested change #2: selection controls for stock-empty Owner menu cards. */
+    .issho-restore-select{display:flex!important;align-items:center;gap:9px;margin:9px 0;padding:9px 10px;border:1px solid #444;border-radius:9px;background:#202020}
+    .issho-restore-select input{width:22px!important;height:22px!important;margin:0!important;accent-color:#2f7d50}
+    .issho-restore-select b{font-size:13px}
   `;
   (document.head||document.documentElement).appendChild(css);
-  window.ISSHO_UI={locale:'id-ID',timezone:TZ,version:'1.1'};
+  window.ISSHO_UI={locale:'id-ID',timezone:TZ,version:'1.2'};
   window.ISSHO_UI.formatDate=function(v){const d=new Date(v);return isNaN(d)?'-':d.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:TZ})};
-  window.ISSHO_UI.formatTime=function(v){const d=new Date(v);return isNaN(d)?'-':d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:TZ)};
+  window.ISSHO_UI.formatTime=function(v){const d=new Date(v);return isNaN(d)?'-':d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:TZ})};
 
   function addOwnerOrderDateTime(){
     try{
@@ -55,44 +63,98 @@
     try{const f=document.getElementById('owner');if(f&&f.contentDocument)out.push(f.contentDocument)}catch(e){}
     return out;
   }
+
   function findRestoreButton(d){
     return [...d.querySelectorAll('button')].find(b=>/PULIHKAN MENU TERPILIH/i.test(String(b.textContent||'')))||null;
   }
-  function restoreItemCount(d,button){
-    // Prefer the actual restore list if it is present in the page.
-    const candidates=[
-      ...d.querySelectorAll('[data-restore-item],.restore-item,[data-restore-list] > *,#restoreList > *,#restoreModal input[type="checkbox"]')
-    ];
-    if(candidates.length){
-      const checked=candidates.filter(x=>x.matches&&x.matches('input[type="checkbox"]')).length;
-      return checked||candidates.length;
-    }
-    // If the restore UI exposes its count through a hidden/list container, use it.
-    const list=[...d.querySelectorAll('[id*="restore" i],[class*="restore" i]')].filter(x=>x!==button&&!button.contains(x));
-    for(const x of list){
-      const n=[...x.children].filter(ch=>{const t=String(ch.textContent||'').trim();return t&&t.length<500&&!/PULIHKAN MENU TERPILIH/i.test(t)}).length;
-      if(n>0&&n<1000)return n;
-    }
-    return null;
+
+  function restoreItemCount(d){
+    return [...d.querySelectorAll('.issho-restore-check')].filter(x=>x.checked).length;
   }
+
   function updateRestoreCount(){
     try{
       for(const d of allDocs()){
         const b=findRestoreButton(d);if(!b)continue;
-        const n=restoreItemCount(d,b);
-        if(n!==null){
-          const base='PULIHKAN MENU TERPILIH';
-          b.textContent='🟢 '+base+' ('+n+')';
-          b.dataset.restoreCount=String(n);
-        }
+        const n=restoreItemCount(d);
+        b.textContent='🟢 PULIHKAN MENU TERPILIH ('+n+')';
+        b.dataset.restoreCount=String(n);
+        b.disabled=n===0;
+        b.style.opacity=n===0?'0.55':'1';
+        b.style.cursor=n===0?'not-allowed':'pointer';
       }
     }catch(e){}
   }
+
+  function selectedIds(d){
+    return [...d.querySelectorAll('.issho-restore-check:checked')].map(x=>x.dataset.productId).filter(Boolean);
+  }
+
+  async function rpc(path,body){
+    const r=await fetch(U+path,{method:'POST',cache:'no-store',headers:{apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const t=await r.text();
+    if(!r.ok)throw Error(t||('HTTP '+r.status));
+    return t?JSON.parse(t):null;
+  }
+
+  function installSelectedRestore(){
+    try{
+      const frame=document.getElementById('owner');
+      const d=frame&&(frame.contentDocument||frame.contentWindow.document);
+      if(!d)return;
+      const parentDoc=window.parent&&window.parent!==window?window.parent.document:null;
+      const parentButton=parentDoc&&parentDoc.getElementById('restore');
+      const buttons=[...(parentButton?[parentButton]:[]),...d.querySelectorAll('button')].filter((b,i,a)=>a.indexOf(b)===i && (b===parentButton || /PULIHKAN MENU TERPILIH/i.test(String(b.textContent||''))));
+      const cards=[...d.querySelectorAll('#products .card')];
+      for(const card of cards){
+        if(card.dataset.isshoRestoreReady)return;
+        const checkbox=card.querySelector('input[type="checkbox"][id^="a-"]');
+        const status=card.querySelector('.badge-off');
+        if(!checkbox||!status)continue;
+        const id=checkbox.id.slice(2);
+        const label=d.createElement('label');
+        label.className='issho-restore-select';
+        const input=d.createElement('input');
+        input.type='checkbox';
+        input.className='issho-restore-check';
+        input.dataset.productId=id;
+        const text=d.createElement('b');
+        text.textContent='Pilih menu ini untuk dipulihkan';
+        label.appendChild(input);label.appendChild(text);
+        const actions=card.querySelector('.actions');
+        if(actions)card.insertBefore(label,actions);else card.appendChild(label);
+        input.addEventListener('change',updateRestoreCount);
+        card.dataset.isshoRestoreReady='1';
+      }
+      for(const b of buttons){
+        if(b.dataset.isshoSelectedRestoreBound)continue;
+        b.textContent='🟢 PULIHKAN MENU TERPILIH (0)';
+        b.dataset.isshoSelectedRestoreBound='1';
+        b.onclick=async function(){
+          const ids=selectedIds(d);
+          if(!ids.length){updateRestoreCount();return;}
+          const pin=d.getElementById('pin')?.value?.trim()||'';
+          if(!pin){alert('Login Owner terlebih dahulu.');return;}
+          b.disabled=true;
+          try{
+            await rpc('/rest/v1/rpc/owner_restore_selected_products',{p_owner_pin:pin,p_product_ids:ids});
+            if(typeof frame.contentWindow.loadProducts==='function')await frame.contentWindow.loadProducts();
+            else frame.contentWindow.location.reload();
+          }catch(e){
+            alert('Gagal memulihkan menu: '+e.message);
+          }finally{b.disabled=false;updateRestoreCount();}
+        };
+      }
+      updateRestoreCount();
+    }catch(e){}
+  }
+
   function startRestoreCounter(){
+    installSelectedRestore();
     updateRestoreCount();
-    const mo=new MutationObserver(()=>updateRestoreCount());
+    const mo=new MutationObserver(()=>{installSelectedRestore();updateRestoreCount()});
     try{mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','checked']})}catch(e){}
-    setInterval(updateRestoreCount,700);
+    setInterval(()=>{installSelectedRestore();updateRestoreCount()},700);
   }
 
   const ownerFrame=document.getElementById('owner');
