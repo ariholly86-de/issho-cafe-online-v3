@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ISSHO CAFE — OWNER</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0b0b;font-family:Arial,sans-serif}iframe{width:100%;height:100%;border:0;display:block}
+#bar{position:fixed;right:14px;top:14px;z-index:99999;display:flex;gap:7px;align-items:center;background:#151515;border:1px solid #444;border-radius:12px;padding:7px;box-shadow:0 8px 25px #000}
+button{border:0;border-radius:9px;padding:10px 13px;font-weight:900;cursor:pointer}.restore{background:#2f7d50;color:#fff}.manager{background:#315b9a;color:#fff}.add{background:#b68142;color:#fff}.dark{background:#242424;color:#fff;border:1px solid #444}
+#status{position:fixed;left:14px;bottom:14px;z-index:100000;background:#151515;color:#fff;border:1px solid #444;border-radius:10px;padding:10px 13px;font:13px Arial;display:none}
+#modal{display:none;position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.75);padding:20px;overflow:auto}#panel{max-width:760px;margin:45px auto;background:#151515;border:1px solid #444;border-radius:15px;padding:16px;color:#fff;box-shadow:0 20px 60px #000}
+#search{width:100%;box-sizing:border-box;margin:9px 0;padding:11px;border:1px solid #444;border-radius:9px;background:#1b1b1b;color:#fff;font-size:15px}#list{max-height:55vh;overflow:auto;border:1px solid #333;border-radius:10px}.item{display:flex;gap:10px;padding:11px;border-bottom:1px solid #333}.item input{width:20px;height:20px}.muted{color:#aaa;font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.green{background:#2f7d50;color:#fff}.gold{background:#b68142;color:#fff}.empty{text-align:center;padding:20px;color:#aaa}
+@media(max-width:700px){#bar{left:6px;right:6px;top:6px;justify-content:flex-end}#bar button{font-size:11px;padding:8px}.manager,.add{display:none}#modal{padding:8px}#panel{margin:45px auto 10px;padding:13px}}
+</style>
+</head>
+<body>
+<div id="bar"><button id="restore" class="restore" type="button">🟢 PULIHKAN MENU TERPILIH (0)</button><button class="manager" type="button" onclick="location.href='owner-menu-manager.html?v=20260831-stable'">🍽️ Kelola Menu & Kategori</button><button class="add" type="button" onclick="location.href='owner-add-menu.html?v=20260831-stable'">➕ Tambah Menu Baru</button></div>
+<div id="status"></div>
+<div id="modal"><div id="panel"><h2 style="margin-top:0">🔴 Stok Kosong / Menu Tersembunyi</h2><div class="muted">Menu yang tidak aktif tetap tersimpan di Owner. Centang menu yang sudah tersedia untuk mengembalikannya ke Pelanggan & Kasir.</div><input id="search" placeholder="🔎 Cari menu tersembunyi..."><div id="list"></div><div class="actions"><button id="all" class="gold" type="button">☑ Pilih Semua</button><button id="bulk" class="green" type="button">🟢 PULIHKAN TERPILIH (0)</button><button id="close" class="dark" type="button">Tutup</button></div><div id="msg" class="muted" style="margin-top:9px"></div></div></div>
+<iframe id="app" title="ISSHO CAFE OWNER" src="owner-stable.html?v=20260831-live-fixed"></iframe>
+<script>
+const SUPA='https://xvhimyflrqrdudijwjdn.supabase.co';
+const KEY='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
+const frame=document.getElementById('app'),restore=document.getElementById('restore'),modal=document.getElementById('modal'),list=document.getElementById('list'),search=document.getElementById('search'),bulk=document.getElementById('bulk'),msg=document.getElementById('msg'),status=document.getElementById('status');
+let hidden=[],selected=new Set(),loading=false;
+const esc=s=>String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
+const W=()=>frame.contentWindow;
+const pin=()=>{try{return W().document.getElementById('pin')?.value?.trim()||''}catch(e){return''}};
+const say=t=>{status.textContent=t;status.style.display='block';clearTimeout(say.t);say.t=setTimeout(()=>status.style.display='none',3500)};
+async function api(path,opt={}){const h={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json',...(opt.headers||{})};const r=await fetch(SUPA+path,{cache:'no-store',...opt,headers:h});const t=await r.text();if(!r.ok)throw Error(t||('HTTP '+r.status));return t?JSON.parse(t):null}
+function updateCount(){restore.textContent='🟢 PULIHKAN MENU TERPILIH ('+hidden.length+')';bulk.textContent='🟢 PULIHKAN TERPILIH ('+selected.size+')'}
+function renderHidden(){const q=search.value.trim().toLowerCase(),rows=hidden.filter(p=>(p.name+' '+(p.description||'')+' '+(p.category_name||'')).toLowerCase().includes(q));list.innerHTML=rows.length?rows.map(p=>'<label class="item"><input type="checkbox" '+(selected.has(p.id)?'checked':'')+' onchange="window.toggleHidden(\''+p.id+'\',this.checked)"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.category_name||'Tanpa Kategori')+'</div></div></label>').join(''):'<div class="empty">✓ Tidak ada menu stok kosong.</div>';updateCount()}
+window.toggleHidden=(id,on)=>{on?selected.add(id):selected.delete(id);updateCount();renderHidden()};
+async function loadHidden(){if(loading)return;const p=pin();if(!p){msg.textContent='Login Owner terlebih dahulu.';updateCount();return}loading=true;msg.textContent='Memuat menu stok kosong...';try{hidden=await api('/rest/v1/rpc/owner_list_hidden_products',{method:'POST',body:JSON.stringify({p_owner_pin:p})})||[];selected=new Set([...selected].filter(id=>hidden.some(x=>x.id===id)));renderHidden();msg.textContent=hidden.length?hidden.length+' menu ditemukan.':'Tidak ada menu tersembunyi.'}catch(e){msg.textContent='Gagal memuat: '+e.message}finally{loading=false}}
+restore.onclick=async()=>{modal.style.display='block';selected.clear();search.value='';updateCount();await loadHidden()};
+document.getElementById('close').onclick=()=>modal.style.display='none';
+document.getElementById('all').onclick=()=>{hidden.forEach(p=>selected.add(p.id));renderHidden()};
+search.oninput=renderHidden;
+bulk.onclick=async()=>{const p=pin(),ids=[...selected];if(!p)return say('Silakan login Owner.');if(!ids.length)return say('Pilih minimal satu menu.');if(!confirm('Pulihkan '+ids.length+' menu ke Pelanggan & Kasir?'))return;bulk.disabled=true;try{const d=await api('/rest/v1/rpc/owner_restore_selected_products',{method:'POST',body:JSON.stringify({p_owner_pin:p,p_product_ids:ids})});say('✓ '+(d?.message||ids.length+' menu berhasil dipulihkan.'));selected.clear();await loadHidden();try{if(typeof W().loadProducts==='function')await W().loadProducts()}catch(e){}}catch(e){say('Gagal: '+e.message)}finally{bulk.disabled=false;updateCount()}};
+frame.addEventListener('load',()=>{setTimeout(loadHidden,900)});setInterval(()=>{if(pin()&&!modal.style.display)loadHidden().catch(()=>{})},5000);updateCount();
+</script>
+</body></html>
