@@ -1,4 +1,4 @@
-/* ISSHO CAFE — UI Standard v1.0
+/* ISSHO CAFE — UI Standard v1.1
    Shared browser/device normalization. Keep every public screen on one UI/language standard. */
 (function(){
   'use strict';
@@ -22,12 +22,10 @@
     }
   `;
   (document.head||document.documentElement).appendChild(css);
-  window.ISSHO_UI={locale:'id-ID',timezone:TZ,version:'1.0'};
+  window.ISSHO_UI={locale:'id-ID',timezone:TZ,version:'1.1'};
   window.ISSHO_UI.formatDate=function(v){const d=new Date(v);return isNaN(d)?'-':d.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:TZ})};
   window.ISSHO_UI.formatTime=function(v){const d=new Date(v);return isNaN(d)?'-':d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:TZ)};
 
-  // Owner-only enhancement: show the exact order date/time already encoded
-  // in the Kasir order number, without changing the existing order flow.
   function addOwnerOrderDateTime(){
     try{
       const frame=document.getElementById('owner');
@@ -51,9 +49,56 @@
       });
     }catch(e){}
   }
+
+  function allDocs(){
+    const out=[document];
+    try{const f=document.getElementById('owner');if(f&&f.contentDocument)out.push(f.contentDocument)}catch(e){}
+    return out;
+  }
+  function findRestoreButton(d){
+    return [...d.querySelectorAll('button')].find(b=>/PULIHKAN MENU TERPILIH/i.test(String(b.textContent||'')))||null;
+  }
+  function restoreItemCount(d,button){
+    // Prefer the actual restore list if it is present in the page.
+    const candidates=[
+      ...d.querySelectorAll('[data-restore-item],.restore-item,[data-restore-list] > *,#restoreList > *,#restoreModal input[type="checkbox"]')
+    ];
+    if(candidates.length){
+      const checked=candidates.filter(x=>x.matches&&x.matches('input[type="checkbox"]')).length;
+      return checked||candidates.length;
+    }
+    // If the restore UI exposes its count through a hidden/list container, use it.
+    const list=[...d.querySelectorAll('[id*="restore" i],[class*="restore" i]')].filter(x=>x!==button&&!button.contains(x));
+    for(const x of list){
+      const n=[...x.children].filter(ch=>{const t=String(ch.textContent||'').trim();return t&&t.length<500&&!/PULIHKAN MENU TERPILIH/i.test(t)}).length;
+      if(n>0&&n<1000)return n;
+    }
+    return null;
+  }
+  function updateRestoreCount(){
+    try{
+      for(const d of allDocs()){
+        const b=findRestoreButton(d);if(!b)continue;
+        const n=restoreItemCount(d,b);
+        if(n!==null){
+          const base='PULIHKAN MENU TERPILIH';
+          b.textContent='🟢 '+base+' ('+n+')';
+          b.dataset.restoreCount=String(n);
+        }
+      }
+    }catch(e){}
+  }
+  function startRestoreCounter(){
+    updateRestoreCount();
+    const mo=new MutationObserver(()=>updateRestoreCount());
+    try{mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','checked']})}catch(e){}
+    setInterval(updateRestoreCount,700);
+  }
+
   const ownerFrame=document.getElementById('owner');
   if(ownerFrame){
-    ownerFrame.addEventListener('load',()=>setTimeout(addOwnerOrderDateTime,500));
+    ownerFrame.addEventListener('load',()=>{setTimeout(addOwnerOrderDateTime,500);setTimeout(startRestoreCounter,600)});
     setInterval(addOwnerOrderDateTime,1200);
+    startRestoreCounter();
   }
 })();
