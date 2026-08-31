@@ -1,0 +1,3 @@
+Owner category catalog source: the same active categories table used by Customer.
+Expected active category count: 20.
+Do not delete or rename categories; Owner must render all active categories from Supabase.
