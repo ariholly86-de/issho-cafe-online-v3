@@ -1,0 +1,30 @@
+name: Restore Owner Stable
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  restore:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore stable Owner files and remove only test button
+        run: |
+          set -e
+          git checkout 3d6f131c222a67cc3249bc7d552dbb5e3dfddbd6 -- owner-rpp02n.html owner-v3.html owner.html
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('owner-v3.html')
+          s=p.read_text()
+          s=s.replace('<button class="red" onclick="clearSim()">🧹 Hapus Order Uji Coba</button>','')
+          p.write_text(s)
+          PY
+          git add owner-rpp02n.html owner-v3.html owner.html
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Restore Owner stable login and remove only test order button'
+          git push
