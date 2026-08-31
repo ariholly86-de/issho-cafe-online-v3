@@ -1,7 +1,9 @@
 /* ISSHO CAFE — UI Standard v1.7 — Owner restore only + compact proof */
 (function(){
 'use strict';
-/* ui-standard.js is shared. Restore controls are allowed ONLY on Owner. */
+/* Canonical Owner wrapper already owns the restore button and modal.
+   Do not attach a second restore handler to #restore. */
+const isCanonicalOwner=document.getElementById('restore');
 const isOwner=/owner-rpp02n|OWNER/i.test(location.pathname+' '+document.title)||!!document.getElementById('owner');
 const isKasir=/staff-printer-universal|staff-v6|staff-alarm/i.test(location.pathname)||/KASIR/i.test(document.title)||!!document.getElementById('kasir');
 function removeRestoreControls(){
@@ -16,6 +18,11 @@ function removeRestoreControls(){
 if(!isOwner || isKasir){
   removeRestoreControls();
   setInterval(removeRestoreControls,500);
+  return;
+}
+/* The canonical Owner wrapper (owner-rpp02n.html) has its own tested
+   modal + Supabase RPC flow. Leave that button completely untouched. */
+if(isCanonicalOwner){
   return;
 }
 const U='https://xvhimyflrqrdudijwjdn.supabase.co',K='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
