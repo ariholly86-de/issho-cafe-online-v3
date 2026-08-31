@@ -28,7 +28,7 @@ button{border:0;border-radius:9px;padding:10px 13px;font-weight:900;cursor:point
 <div class="actions"><button class="gold" type="button" onclick="selectAllVisible()">☑ Pilih Semua</button><button id="bulk" class="green" type="button" onclick="restoreSelected()">🟢 PULIHKAN MENU TERPILIH (0)</button><button class="dark" type="button" onclick="closeModal()">Tutup</button></div>
 <div id="modalMsg" class="muted" style="margin-top:9px"></div>
 </div></div>
-<iframe id="app" title="ISSHO CAFE OWNER" src="owner-v3.html?v=20260831-owner-category-sync"></iframe>
+<iframe id="app" title="ISSHO CAFE OWNER" src="owner-v3.html?v=20260830-owner-fix"></iframe>
 <script>
 const SUPA='https://xvhimyflrqrdudijwjdn.supabase.co',KEY='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
 const frame=document.getElementById('app'),topBtn=document.getElementById('restore'),modal=document.getElementById('modal'),listEl=document.getElementById('list'),searchEl=document.getElementById('search'),bulkBtn=document.getElementById('bulk'),msgEl=document.getElementById('modalMsg'),statusEl=document.getElementById('status');
@@ -46,37 +46,6 @@ async function loadHidden(){if(loading)return;const pin=getPin();if(!pin){msgEl.
 async function openModal(){modal.style.display='block';searchEl.value='';selected.clear();updateCount();try{await loadHidden()}catch(e){listEl.innerHTML='<div class="empty" style="color:#ffb4ad">Gagal memuat: '+esc(e.message)+'</div>';msgEl.textContent='Periksa login Owner dan koneksi Supabase.'}}
 function closeModal(){modal.style.display='none'}
 async function restoreSelected(){const pin=getPin();if(!pin)return show('Silakan login Owner terlebih dahulu.');const ids=[...selected];if(!ids.length)return show('Pilih minimal satu menu.');if(!confirm('Pulihkan '+ids.length+' menu terpilih ke Pelanggan & Kasir?'))return;bulkBtn.disabled=true;bulkBtn.textContent='⏳ MEMULIHKAN '+ids.length+' MENU...';try{const d=await supa('/rest/v1/rpc/owner_restore_selected_products',{method:'POST',body:JSON.stringify({p_owner_pin:pin,p_product_ids:ids})});show('✓ '+(d.message||ids.length+' menu berhasil dipulihkan.'));selected.clear();await loadHidden();try{if(typeof frame.contentWindow.loadProducts==='function')await frame.contentWindow.loadProducts();}catch(e){}setTimeout(()=>{try{frame.contentWindow.location.reload()}catch(e){}},250)}catch(e){show('Gagal memulihkan: '+e.message);msgEl.innerHTML='<span style="color:#ffb4ad">Gagal: '+esc(e.message)+'</span>'}finally{bulkBtn.disabled=false;updateCount()}}
-
-/* CATEGORY SYNC: Owner must use the exact same active category source as Customer.
-   Customer reads public active categories ordered by sort_order,name and only
-   shows categories that contain at least one active product. Owner previously
-   used hard-coded name inference, which caused the category list to differ. */
-async function syncOwnerCategories(){
-  try{
-    const [cats,prods]=await Promise.all([
-      supa('/rest/v1/categories?select=id,name,active,sort_order&active=eq.true&order=sort_order,name'),
-      supa('/rest/v1/products?select=id,category_id,active&order=sort_order,name')
-    ]);
-    const activeProducts=(prods||[]).filter(p=>p.active===true);
-    const visible=(cats||[]).filter(c=>activeProducts.some(p=>p.category_id===c.id));
-    const w=frame.contentWindow;
-    if(!w)return;
-    const categoryMap=Object.fromEntries((cats||[]).map(c=>[String(c.id),c.name]));
-    w.category=function(p){return categoryMap[String(p.category_id)]||'Tanpa Kategori'};
-    w.cats=function(){
-      const all=['Semua',...visible.map(c=>c.name)];
-      const current=all.includes(w.CAT)?w.CAT:'Semua';
-      w.CAT=current;
-      const el=w.document.getElementById('cats');
-      if(!el)return;
-      el.innerHTML=all.map(c=>`<button class="${current===c?'gold':'dark'}" onclick="CAT=${JSON.stringify(c)};renderProducts()">${esc(c)}</button>`).join('');
-    };
-    w.cats();
-    if(typeof w.renderProducts==='function')w.renderProducts();
-  }catch(e){console.warn('Owner category sync failed',e)}
-}
-frame.addEventListener('load',()=>{syncOwnerCategories();setTimeout(syncOwnerCategories,500);setTimeout(syncOwnerCategories,1500)});
 topBtn.addEventListener('click',openModal);modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});updateCount();
 </script>
-<script src="/ui-standard.js?v=20260830-ui-v2"></script></body>
-</html>
+<script src="/ui-standard.js?v=20260830-ui-v2"></script></body></html>
