@@ -1,18 +1,21 @@
-/* ISSHO CAFE — UI Standard v1.6 — Owner restore only + compact proof */
+/* ISSHO CAFE — UI Standard v1.7 — Owner restore only + compact proof */
 (function(){
 'use strict';
-/* ui-standard.js is shared by Owner/Kasir. NEVER inject Owner restore controls into Kasir. */
+/* ui-standard.js is shared. Restore controls are allowed ONLY on Owner. */
+const isOwner=/owner-rpp02n|OWNER/i.test(location.pathname+' '+document.title)||!!document.getElementById('owner');
 const isKasir=/staff-printer-universal|staff-v6|staff-alarm/i.test(location.pathname)||/KASIR/i.test(document.title)||!!document.getElementById('kasir');
-if(isKasir){
-  function removeKasirRestore(){
-    document.querySelectorAll('button,a,[role="button"]').forEach(el=>{
-      const t=(el.textContent||'').replace(/\s+/g,' ').trim();
-      if(/PULIHKAN MENU/i.test(t)) el.remove();
-    });
-    const s=document.getElementById('issho-ui-standard');if(s)s.remove();
-  }
-  removeKasirRestore();
-  setInterval(removeKasirRestore,500);
+function removeRestoreControls(){
+  document.querySelectorAll('button,a,[role="button"]').forEach(el=>{
+    const t=(el.textContent||'').replace(/\s+/g,' ').trim();
+    if(/PULIHKAN MENU/i.test(t)) el.remove();
+  });
+  const s=document.getElementById('issho-ui-standard');if(s)s.remove();
+  const old=document.getElementById('isshoRestoreButton');if(old)old.remove();
+}
+/* Kasir, Pelanggan, and Dapur must NEVER receive Owner restore controls. */
+if(!isOwner || isKasir){
+  removeRestoreControls();
+  setInterval(removeRestoreControls,500);
   return;
 }
 const U='https://xvhimyflrqrdudijwjdn.supabase.co',K='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
