@@ -16,29 +16,54 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Remove premature script terminator
+      - name: Repair Owner without changing other flows
+        shell: bash
         run: |
+          set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('owner-v3.html')
+          import re, urllib.request
+
+          # 1) Keep the Owner's existing safe page, only add order date/time.
+          p = Path('owner-v3-safe.html')
           s = p.read_text(encoding='utf-8')
-          old = '<script src="/ui-standard.js?v=20260830-ui-v2"></script>'
-          new = ''
-          if old not in s:
-              print('Target already fixed or not found.')
-              raise SystemExit(0)
-          p.write_text(s.replace(old, new), encoding='utf-8')
-          print('Fixed owner-v3.html')
+          css = '.order-date,.order-time{display:block;color:#c9c9c9;font-size:13px;font-weight:700;margin-top:4px}'
+          if '.order-date,.order-time{' not in s:
+              s = s.replace('.item{padding:7px 0;border-bottom:1px solid #333}', '.item{padding:7px 0;border-bottom:1px solid #333}'+css, 1)
+
+          if 'function orderDateTimeOwner(x)' not in s:
+              helper = r'''function orderDateTimeOwner(x){const raw=x?.created_at||x?.order_date||x?.ordered_at||x?.createdAt||x?.orderDate;if(raw){const d=new Date(raw);if(!isNaN(d))return{date:d.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Asia/Jakarta'}),time:d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'Asia/Jakarta'})}}const m=String(x?.order_number||'').match(/^ISS-(\d{6})-(\d{6})-/i);if(m){const ds=m[1],ts=m[2],yy=Number(ds.slice(0,2)),mm=Number(ds.slice(2,4)),dd=Number(ds.slice(4,6)),hh=Number(ts.slice(0,2)),mi=Number(ts.slice(2,4)),ss=Number(ts.slice(4,6));return{date:mm>=1&&mm<=12&&dd>=1&&dd<=31?String(dd).padStart(2,'0')+'/'+String(mm).padStart(2,'0')+'/20'+String(yy).padStart(2,'0'):'-',time:hh<=23&&mi<=59&&ss<=59?String(hh).padStart(2,'0')+':'+String(mi).padStart(2,'0')+':'+String(ss).padStart(2,'0'):'-'}}return{date:'-',time:'-'}}
+'''
+              s = s.replace('async function loadOrders(){', helper+'async function loadOrders(){', 1)
+
+          new_load = r'''async function loadOrders(){try{const o=await api('/rest/v1/rpc/staff_get_orders',{method:'POST',body:JSON.stringify({p_pin:P})});$('orderList').innerHTML=(o||[]).length?o.map(x=>{const dt=orderDateTimeOwner(x);return `<div class="order"><div class="row"><div><b>${esc(x.order_number)}</b><span class="order-date">Tanggal Order: ${dt.date}</span><span class="order-time">Jam Order: ${dt.time} WIB</span><br>${esc(x.table_name||'Take Away')} • ${esc(x.payment_method)} • ${esc(x.payment_status)} • ${esc(x.order_status)}</div><b>${money(x.total)}</b></div>${(x.items||[]).map(i=>`<div class="item">${esc(i.name)} × ${i.qty} — ${money(i.price*i.qty)}</div>`).join('')}${x.payment_proof_url?`<p><b>Bukti QRIS</b><br><a href="${esc(x.payment_proof_url)}" target="_blank"><img class="proof" src="${esc(x.payment_proof_url)}"></a></p>`:''}<div class="actions">${x.payment_method==='QRIS'&&x.payment_status!=='PAID'?`<button class="green" onclick="verify('${x.id}',true)">✓ Verifikasi QRIS</button><button class="red" onclick="verify('${x.id}',false)">Tolak</button>`:''}${x.payment_method==='CASH'&&x.payment_status!=='PAID'?`<button class="green" onclick="paid('${x.id}')">Terima Tunai</button>`:''}${x.payment_status==='PAID'&&x.order_status==='NEW'?`<button class="gold" onclick="statusOrder('${x.id}','ACCEPTED')">Terima Order</button>`:''}${x.payment_status==='PAID'&&x.order_status==='ACCEPTED'?`<button class="gold" onclick="statusOrder('${x.id}','PREPARING')">Mulai Masak</button>`:''}</div></div>`}).join(''):'<p class="muted">Belum ada pesanan.</p>'}catch(e){$('orderList').innerHTML='<div class="err">'+esc(e.message)+'</div>'}}
+'''
+          s2, n = re.subn(r'async function loadOrders\(\)\{.*?\}\s*async function verify', new_load+'async function verify', s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit('Owner order function not found; aborting')
+          s = s2.replace('Sore 17:00–Close', 'Sore 17:00–24:00').replace('Seharian 07:00–Close', 'Seharian 07:00–24:00')
+          p.write_text(s, encoding='utf-8')
+
+          # 2) Synchronize the current production Owner wrapper, then fix only its report click.
+          live='https://issho-cafe-online-v3.vercel.app/owner-rpp02n.html?v=20260831-selected-final'
+          w=urllib.request.urlopen(live, timeout=30).read().decode('utf-8')
+          old="const w=iw(),b=w.document.getElementById('reports');if(b)b.scrollIntoView({behavior:'smooth'});"
+          new="const w=iw(),b=w.document.getElementById('reports');if(typeof w.tab==='function')w.tab('reports');else if(b){b.classList.remove('hidden');b.scrollIntoView({behavior:'smooth');}}"
+          if old in w:
+              w=w.replace(old,new,1)
+          elif "if(typeof w.tab==='function')w.tab('reports')" not in w:
+              raise SystemExit('Production Owner report handler not found; aborting')
+          Path('owner-rpp02n.html').write_text(w, encoding='utf-8')
           PY
 
       - name: Commit fix
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add owner-v3.html
+          git add owner-v3-safe.html owner-rpp02n.html
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
-          git commit -m "Fix Owner JavaScript premature script termination"
+          git commit -m "Fix Owner reports and order date time"
           git push
