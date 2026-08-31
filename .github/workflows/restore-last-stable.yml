@@ -1,0 +1,40 @@
+name: Restore ISSHO CAFE Last Stable
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore exact stable files
+        run: |
+          set -e
+          git checkout 3d6f131c222a67cc3249bc7d552dbb5e3dfddbd6 -- owner-rpp02n.html owner-v3.html owner.html
+          git checkout 3d6f131c222a67cc3249bc7d552dbb5e3dfddbd6 -- customer.html stock-v2.html staff-alarm.html dapur-v8.html qr-meja.html customer-live-fixed.html staff-printer-universal.html ui-standard.js || true
+          git rm -f owner-v3-fixed.html _vercel_redeploy_owner_fix.txt 2>/dev/null || true
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'Stable files already restored.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Restore ISSHO CAFE last stable version'
+          git push
+
+      - name: Remove this temporary workflow
+        run: |
+          git rm -f .github/workflows/restore-last-stable.yml
+          git commit -m 'Remove temporary restore workflow'
+          git push
