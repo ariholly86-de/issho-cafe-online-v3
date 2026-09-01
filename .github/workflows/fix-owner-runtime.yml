@@ -38,14 +38,29 @@ jobs:
           print('Fixed owner-v3.html')
           PY
 
+      - name: Harden Owner login
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('owner-v3-safe.html')
+          s = p.read_text(encoding='utf-8')
+          old = "async function login(){const p=$('pin').value.trim();if(!/^\\d{4,8}$/.test(p))return $('msg').innerHTML='<div class=\"err\">PIN harus 4–8 angka.</div>';try{const raw=await api('/rest/v1/rpc/staff_role',{method:'POST',body:JSON.stringify({p_pin:p})}),role=String(typeof raw==='string'?raw:(Array.isArray(raw)?raw[0]:(raw&&raw.role)||'')).trim().toUpperCase();if(role!=='OWNER')throw Error('PIN Owner tidak cocok.');P=p;$('login').className='hidden';$('app').className='';$('date').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'});await Promise.all([loadCategories(),loadProducts(),loadOrders(),report()]);tab('orders')}catch(e){$('msg').innerHTML='<div class=\"err\">Login gagal: '+esc(e.message)+'</div>'}}"
+          new = "async function login(){const p=$('pin').value.trim();if(!/^\\d{4,8}$/.test(p))return $('msg').innerHTML='<div class=\"err\">PIN harus 4–8 angka.</div>';try{const raw=await api('/rest/v1/rpc/staff_role',{method:'POST',body:JSON.stringify({p_pin:p})}),role=String(typeof raw==='string'?raw:(Array.isArray(raw)?raw[0]:(raw&&raw.role)||'')).trim().toUpperCase();if(role!=='OWNER')throw Error('PIN Owner tidak cocok.');P=p;$('login').className='hidden';$('app').className='';$('date').value=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'});tab('reports');await Promise.allSettled([loadCategories(),loadProducts(),report()]);tab('reports')}catch(e){$('msg').innerHTML='<div class=\"err\">Login gagal: '+esc(e.message)+'</div>'}}"
+          if old not in s:
+              print('Owner login already hardened or target not found.')
+              raise SystemExit(0)
+          p.write_text(s.replace(old, new), encoding='utf-8')
+          print('Hardened owner-v3-safe.html login')
+          PY
+
       - name: Commit fix
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add owner-v3.html
+          git add owner-v3.html owner-v3-safe.html
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
-          git commit -m "Fix Owner JavaScript premature script termination"
+          git commit -m "Harden Owner login against report load failures"
           git push
