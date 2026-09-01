@@ -1,4 +1,4 @@
-/* ISSHO CAFE — UI Standard v1.9 — Owner restore interaction fix */
+/* ISSHO CAFE — UI Standard v1.9 — Owner restore interaction fix + cashier expense detail */
 (function(){
 'use strict';
 const isCanonicalOwner=!!document.getElementById('restore');
@@ -14,9 +14,6 @@ function removeRestoreControls(){
   const old=document.getElementById('isshoRestoreButton'); if(old) old.remove();
 }
 
-/* IMPORTANT: owner-rpp02n.html is the canonical Owner restore UI.
-   Do not capture/intercept its click events. Its own handler must receive
-   the click so openModal() can load the hidden products and show the modal. */
 if(isCanonicalOwner){
   const safety=()=>{
     const b=document.getElementById('restore');
@@ -32,7 +29,59 @@ if(isCanonicalOwner){
   return;
 }
 
-if(!isOwner||isKasir){
+/* Cashier: only add the requested expense detail to the existing daily report.
+   No cashier buttons, order flow, payment flow, login, or existing report totals are changed. */
+if(isKasir){
+  const U='https://xvhimyflrqrdudijwjdn.supabase.co',K='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
+  const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
+  const esc=s=>String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
+  async function api(path,opt={}){const h=Object.assign({apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},opt.headers||{}),r=await fetch(U+path,Object.assign({cache:'no-store'},opt,{headers:h})),t=await r.text();if(!r.ok)throw Error(t||('HTTP '+r.status));return t?JSON.parse(t):null}
+  function findKasirWindow(){
+    try{
+      let w=window;
+      for(let i=0;i<6;i++){
+        const d=w.document;
+        if(d&&d.getElementById('reportOut')&&d.getElementById('date')) return w;
+        const f=d&&d.querySelector('iframe');
+        if(!f||!f.contentWindow) break;
+        w=f.contentWindow;
+      }
+    }catch(e){}
+    return null;
+  }
+  function installExpenseStyles(d){
+    if(!d||d.getElementById('issho-expense-detail-style'))return;
+    const s=d.createElement('style');s.id='issho-expense-detail-style';s.textContent=`.issho-expense-detail{margin-top:14px;padding:14px;border:1px solid #383838;border-radius:10px;background:#171717}.issho-expense-detail h3{margin:0 0 10px}.issho-expense-table{width:100%;border-collapse:collapse}.issho-expense-table th,.issho-expense-table td{padding:9px 8px;border-bottom:1px solid #333;text-align:left}.issho-expense-table th:last-child,.issho-expense-table td:last-child{text-align:right}.issho-expense-total{font-weight:900;font-size:18px}.issho-expense-empty{color:#aaa;padding:8px 0}@media print{.issho-expense-detail{border:1px solid #000;background:#fff;color:#000;break-inside:avoid}.issho-expense-table th,.issho-expense-table td{border-bottom:1px solid #999;color:#000}}`;(d.head||d.documentElement).appendChild(s);
+  }
+  async function renderExpenseDetail(){
+    const w=findKasirWindow(); if(!w)return;
+    const d=w.document, out=d.getElementById('reportOut'), date=d.getElementById('date'); if(!out||!date||!date.value)return;
+    installExpenseStyles(d);
+    const pin=String(w.P||'').trim() || (()=>{try{return w.sessionStorage.getItem('issho_staff_pin')||w.localStorage.getItem('issho_staff_pin')||''}catch(e){return''}})();
+    if(!pin)return;
+    const day=date.value,from=day+'T00:00:00+07:00',end=new Date(day+'T00:00:00+07:00');end.setDate(end.getDate()+1);
+    try{
+      const rows=await api('/rest/v1/rpc/staff_expense_details',{method:'POST',body:JSON.stringify({p_pin:pin,p_from:from,p_to:end.toISOString()})});
+      const list=Array.isArray(rows)?rows:[];
+      let box=d.getElementById('isshoExpenseDetail');
+      if(!box){box=d.createElement('div');box.id='isshoExpenseDetail';box.className='issho-expense-detail';out.appendChild(box)}
+      if(!list.length){box.innerHTML='<h3>💸 Detail Pengeluaran</h3><div class="issho-expense-empty">Tidak ada pengeluaran pada tanggal '+esc(day)+'.</div>';return}
+      const total=list.reduce((s,x)=>s+(Number(x.amount)||0),0);
+      box.innerHTML='<h3>💸 Detail Pengeluaran</h3><table class="issho-expense-table"><thead><tr><th>No.</th><th>Kategori</th><th>Keterangan</th><th>Nominal</th></tr></thead><tbody>'+list.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.category||'Operasional')+'</td><td>'+esc(x.description||'-')+'</td><td>'+money(x.amount)+'</td></tr>').join('')+'</tbody><tfoot><tr class="issho-expense-total"><td colspan="3">TOTAL PENGELUARAN</td><td>'+money(total)+'</td></tr></tfoot></table>';
+    }catch(e){
+      let box=d.getElementById('isshoExpenseDetail');
+      if(!box){box=d.createElement('div');box.id='isshoExpenseDetail';box.className='issho-expense-detail';out.appendChild(box)}
+      box.innerHTML='<h3>💸 Detail Pengeluaran</h3><div class="issho-expense-empty">Detail pengeluaran tidak dapat dimuat: '+esc(e.message)+'</div>';
+    }
+  }
+  let timer=null;
+  function schedule(){clearTimeout(timer);timer=setTimeout(renderExpenseDetail,120)}
+  const boot=()=>{schedule();const w=findKasirWindow();if(w){const r=w.report;if(typeof r==='function'&&!r.__expenseDetailWrapped){const orig=r;w.report=async function(){const v=await orig.apply(this,arguments);schedule();return v};w.report.__expenseDetailWrapped=true}}};
+  boot();setInterval(boot,1200);setInterval(schedule,5000);
+  return;
+}
+
+if(!isOwner){
   removeRestoreControls();
   setInterval(removeRestoreControls,500);
   return;
