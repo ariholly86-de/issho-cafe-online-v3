@@ -8,7 +8,6 @@ const $=id=>{const d=D();return d&&d.getElementById(id)};
 const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-/* HAPUS HANYA BLOK "MENU FAVORIT" DAN ISINYA. FUNGSI LAIN TIDAK DIUBAH. */
 function removeFavorite(){
   const d=D(); if(!d||!d.body)return;
   try{
@@ -24,20 +23,33 @@ function removeFavorite(){
   }catch(e){}
 }
 
+function hideOldPrint(){
+  const d=D(); if(!d)return;
+  try{
+    const reports=d.getElementById('reports'); if(!reports)return;
+    reports.querySelectorAll('button').forEach(b=>{
+      const tx=String(b.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+      const oc=String(b.getAttribute('onclick')||'').toLowerCase();
+      if(tx.includes('print')||oc.includes('printreport')) b.style.display='none';
+    });
+  }catch(e){}
+}
+
 function printDetail(){
   const d=D();
   const result=d&&d.getElementById('mr-result');
   if(!result||!result.innerHTML.trim())return;
-  const title=(d.getElementById('date')&&d.getElementById('date').value)||new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'});
+  const periodText=(result.querySelector('div')&&result.querySelector('div').textContent)||'';
   const w=window.open('','_blank','width=1100,height=800');
   if(!w){alert('Popup print diblokir browser. Izinkan popup untuk halaman Owner.');return;}
   w.document.open();
-  w.document.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Rekapan Detail ISSHO CAFE</title><style>body{font-family:Arial,sans-serif;margin:24px;color:#111;background:#fff}h1{margin:0 0 5px;font-size:22px}h2,h3{color:#111}.print-head{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px}.print-note{font-size:12px;color:#555}.mr-print table{width:100%;min-width:0!important;border-collapse:collapse}.mr-print th,.mr-print td{padding:7px;border:1px solid #ccc}.mr-print th{background:#eee}.mr-print>div{break-inside:avoid}.mr-print [style*="background:#202020"],.mr-print [style*="background:#222"]{background:#f3f3f3!important;color:#111!important}.mr-print [style*="color:#aaa"]{color:#555!important}@media print{body{margin:12mm}.no-print{display:none!important}}</style></head><body><div class="print-head"><h1>ISSHO CAFE — Rekapan Detail Sesuai Kategori</h1><div class="print-note">Periode acuan: '+esc(title)+' • Dicetak: '+new Date().toLocaleString('id-ID')+'</div></div><div class="mr-print">'+result.innerHTML+'</div><script>window.onload=()=>{setTimeout(()=>window.print(),250)}<\/script></body></html>');
+  w.document.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Rekapan Detail ISSHO CAFE</title><style>body{font-family:Arial,sans-serif;margin:24px;color:#111;background:#fff}h1{margin:0 0 5px;font-size:22px}.print-head{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px}.print-note{font-size:12px;color:#555}.mr-print table{width:100%;min-width:0!important;border-collapse:collapse}.mr-print th,.mr-print td{padding:7px;border:1px solid #ccc}.mr-print th{background:#eee}.mr-print>div{break-inside:avoid}.mr-print [style*="background:#202020"],.mr-print [style*="background:#222"]{background:#f3f3f3!important;color:#111!important}.mr-print [style*="color:#aaa"]{color:#555!important}@media print{body{margin:12mm}}</style></head><body><div class="print-head"><h1>ISSHO CAFE — Rekapan Detail Sesuai Kategori</h1><div class="print-note">'+esc(periodText)+' • Dicetak: '+new Date().toLocaleString('id-ID')+'</div></div><div class="mr-print">'+result.innerHTML+'</div><script>window.onload=()=>{setTimeout(()=>window.print(),250)}<\/script></body></html>');
   w.document.close();
 }
 
 function boot(){
   const d=D(),w=W();if(!d||!w)return;if(!d.getElementById('reports'))return;
+  hideOldPrint();
   const s=d.getElementById('session');if(s){s.innerHTML='<option value="day">Pagi 07:00–24:00 Malam</option>';s.value='day'}
   const rb=d.getElementById('reportBox');if(!rb)return;
   let box=d.getElementById('master-rekap-detail');
@@ -53,4 +65,4 @@ function boot(){
   removeFavorite();
 }
 const f=F();if(f)f.addEventListener('load',()=>setTimeout(boot,100));boot();setInterval(boot,1000);setInterval(removeFavorite,500);
-})();/* MASTER OWNER REKAP LOCK — MENU FAVORIT REMOVED + DETAIL PRINT */
+})();/* MASTER OWNER REKAP LOCK — MENU FAVORIT REMOVED + DETAIL PRINT + OLD PRINT MOVED */
