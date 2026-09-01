@@ -1,0 +1,18 @@
+(()=>{
+'use strict';
+const S='https://xvhimyflrqrdudijwjdn.supabase.co',K='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
+const f=document.getElementById('owner');
+const D=()=>{try{return f&&(f.contentDocument||f.contentWindow.document)}catch(e){return null}};
+let timer=null,lastKey='',busy=false;
+function esc(s){return String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]) )}
+function money(n){return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0)}
+function pin(){const d=D();return d?.getElementById('pin')?.value?.trim()||''}
+function currentDate(){const d=D(),v=d?.getElementById('date')?.value;return v||new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'})}
+function period(){const a=currentDate().split('-').map(Number),f=new Date(a[0],a[1]-1,a[2],7,0,0),t=new Date(a[0],a[1]-1,a[2]+1,0,0,0);return[f,t]}
+async function fetchDetail(){const p=pin();if(!p)return null;const [from,to]=period();const r=await fetch(S+'/rest/v1/rpc/owner_sales_detail_report',{method:'POST',cache:'no-store',headers:{apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},body:JSON.stringify({p_owner_pin:p,p_from:from.toISOString(),p_to:to.toISOString()})});if(!r.ok)throw Error(await r.text());return await r.json()}
+function stableKey(x){return JSON.stringify(x||{});}
+function render(data){const d=D(),box=d?.getElementById('mr-result');if(!box||!data)return;const cats=Array.isArray(data.categories)?data.categories:[];let h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:10px 0">';[['Pesanan Lunas',data.orders||0],['Total Qty',data.total_qty||0],['Total Omzet',money(data.omzet||0)],['Tunai',money(data.cash||0)],['QRIS',money(data.qris||0)]].forEach(v=>h+='<div style="background:#202020;border:1px solid #383838;border-radius:9px;padding:9px"><small style="color:#aaa">'+v[0]+'</small><br><b>'+v[1]+'</b></div>');h+='</div><div style="color:#aaa;font-size:13px">Harian • 07:00–24:00 • transaksi PAID • <b>REALTIME</b></div>';cats.forEach(c=>{h+='<div style="border:1px solid #444;border-radius:10px;overflow:auto;margin-top:10px"><div style="background:#222;padding:10px;font-weight:900">🍽️ '+esc(c.category||'Tanpa Kategori')+' <span style="float:right">'+Number(c.quantity||0)+' • '+money(c.total||0)+'</span></div><table style="width:100%;min-width:560px;border-collapse:collapse"><tr><th style="padding:8px;text-align:left">Nama Menu</th><th style="padding:8px;text-align:right">Harga</th><th style="padding:8px;text-align:right">Qty</th><th style="padding:8px;text-align:right">Total</th></tr>';(c.items||[]).forEach(i=>h+='<tr><td style="padding:8px;border-top:1px solid #333">'+esc(i.name||'')+'</td><td style="padding:8px;text-align:right;border-top:1px solid #333">'+money(i.unit_price||0)+'</td><td style="padding:8px;text-align:right;border-top:1px solid #333">'+Number(i.quantity||0)+'</td><td style="padding:8px;text-align:right;border-top:1px solid #333">'+money(i.total||0)+'</td></tr>');h+='</table></div>'});if(!cats.length)h+='<div style="padding:12px;color:#aaa">Belum ada transaksi PAID pada periode ini.</div>';box.innerHTML=h;}
+async function tick(){if(busy)return;const d=D();if(!d?.getElementById('master-rekap-detail'))return;if(!pin())return;busy=true;try{const data=await fetchDetail(),key=stableKey(data);if(key!==lastKey){lastKey=key;render(data)}}catch(e){}finally{busy=false}}
+function start(){if(timer)clearInterval(timer);timer=setInterval(tick,30000);setTimeout(tick,1500)}
+if(f)f.addEventListener('load',()=>setTimeout(start,800));start();
+})();
