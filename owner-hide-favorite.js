@@ -49,14 +49,34 @@ function stabilize(d){
     d.__ownerResultObserver=ob;
   }
 }
+function moveOwnerTools(d){
+  try{
+    const tools=document.getElementById('tools');
+    const app=d&&d.getElementById('app');
+    if(!tools||!app)return;
+    if(tools.ownerToolsMoved==='1'&&tools.ownerDocument===d)return;
+    const old=d.getElementById('owner-tools-inside-style');
+    if(!old){
+      const st=d.createElement('style');
+      st.id='owner-tools-inside-style';
+      st.textContent='#tools{display:flex!important;position:relative!important;right:auto!important;top:auto!important;z-index:20!important;gap:10px!important;background:#151515!important;border:1px solid #444!important;border-radius:15px!important;padding:12px!important;box-shadow:0 8px 25px #000!important;margin:0 0 14px!important;width:100%!important;box-sizing:border-box!important}#tools .btn{border:0!important;border-radius:12px!important;padding:16px 20px!important;font-weight:900!important;color:#fff!important;cursor:pointer!important;font-size:18px!important;flex:1 1 0!important;min-height:58px!important}#tools .green{background:#2f7d50!important}#tools .gold{background:#b68142!important}@media(max-width:700px){#tools{padding:8px!important;gap:7px!important}#tools .btn{font-size:13px!important;padding:12px 9px!important;min-height:48px!important}}';
+      (d.head||d.documentElement).appendChild(st);
+    }
+    app.insertBefore(d.adoptNode(tools),app.firstChild);
+    tools.ownerToolsMoved='1';
+    const manage=tools.querySelector('.gold');
+    if(manage)manage.setAttribute('onclick',"parent.location.href='owner-menu-manager.html'");
+  }catch(e){}
+}
 function setup(){
   const d=getDoc();
   if(!d)return;
   stabilize(d);
   clean(d);
+  moveOwnerTools(d);
   const app=d.getElementById('app')||d.body;
   if(app&&!d.__ownerFavoriteObserver){
-    const ob=new MutationObserver(()=>clean(d));
+    const ob=new MutationObserver(()=>{clean(d);moveOwnerTools(d)});
     ob.observe(app,{childList:true,subtree:true});
     d.__ownerFavoriteObserver=ob;
   }
