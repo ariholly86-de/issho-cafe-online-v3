@@ -90,4 +90,10 @@ if(!document.getElementById('owner-realtime-sync-loader')){
   s.src='/owner-realtime-sync.js?v=20260902-realtime-v1';
   document.head.appendChild(s);
 }
+if(!document.getElementById('owner-image-upload-loader')){
+  const s=document.createElement('script');
+  s.id='owner-image-upload-loader';
+  s.src='/owner-image-upload.js?v=20260902-image-upload-v1';
+  document.head.appendChild(s);
+}
 })();
