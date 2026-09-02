@@ -1,0 +1,22 @@
+name: Normalize Minuman Final Retry
+on:
+  push:
+    paths:
+      - '.normalize-trigger'
+jobs:
+  normalize:
+    strategy:
+      fail-fast: false
+      matrix:
+        product_id:
+          - '06cd993e-3f01-42fd-82be-87ce5b4194dc'
+          - '05ac8ddc-6233-4478-ba80-af981bb4e253'
+          - '1f37ac56-ecbe-48c1-ad3f-5e1452be1104'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process product
+        shell: bash
+        run: |
+          set -e
+          curl --fail --show-error --silent --max-time 900 "https://xvhimyflrqrdudijwjdn.supabase.co/functions/v1/run-minuman-normalizer-v2?product_id=${{ matrix.product_id }}"
+          echo
