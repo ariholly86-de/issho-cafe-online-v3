@@ -17,8 +17,6 @@ function clean(){
     }
     target.remove();
   });
-  const clock=d.getElementById('mr-clock');
-  if(clock)clock.remove();
 }
 clean();
 const f=document.getElementById('owner');
