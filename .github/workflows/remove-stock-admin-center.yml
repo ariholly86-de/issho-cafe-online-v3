@@ -1,0 +1,29 @@
+name: Remove Admin Center from Stock
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  remove:
+    if: ${{ !contains(github.event.head_commit.message, '[stock-admin-center-removed]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove Admin Center button and workflow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('stock-v2.html')
+          s=p.read_text()
+          old='<a class="linkbtn" href="/admin-center.html" target="_blank">⚙️ Admin Center</a>'
+          if old not in s:
+              raise SystemExit('Admin Center button not found in stock-v2.html')
+          p.write_text(s.replace(old,''))
+          Path('.github/workflows/remove-stock-admin-center.yml').unlink()
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add stock-v2.html .github/workflows/remove-stock-admin-center.yml
+          git commit -m "Hapus tombol Admin Center dari Stok [stock-admin-center-removed]"
+          git push
