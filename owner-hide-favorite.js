@@ -22,4 +22,10 @@ clean();
 const f=document.getElementById('owner');
 if(f)f.addEventListener('load',()=>setTimeout(clean,100));
 setInterval(clean,500);
+if(!document.getElementById('owner-realtime-sync-loader')){
+  const s=document.createElement('script');
+  s.id='owner-realtime-sync-loader';
+  s.src='/owner-realtime-sync.js?v=20260902-realtime-v1';
+  document.head.appendChild(s);
+}
 })();
