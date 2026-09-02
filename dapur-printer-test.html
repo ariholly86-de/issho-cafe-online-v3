@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>ISSHO CAFE — PRINTER DAPUR</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial,sans-serif}.wrap{max-width:760px;margin:auto;padding:16px}.card{background:#151515;border:1px solid #333;border-radius:14px;padding:18px;margin:12px 0}h1,h2{margin-top:0}.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.muted{color:#aaa;font-size:14px}.status{padding:10px 12px;border-radius:10px;background:#292929;margin:12px 0}.ok{background:#12351f;border:1px solid #2f8b59}.warn{background:#3a2d12;border:1px solid #b68142}.err{background:#5b201b;border:1px solid #a9443c}.actions{display:flex;gap:10px;flex-wrap:wrap}button{border:0;border-radius:9px;padding:12px 15px;font-weight:900;cursor:pointer}.gold{background:#b68142;color:#fff}.green{background:#2f8b59;color:#fff}.blue{background:#2d68b8;color:#fff}.dark{background:#252525;color:#fff;border:1px solid #444}pre{background:#080808;border:1px solid #333;border-radius:10px;padding:14px;white-space:pre-wrap;font-size:13px;line-height:1.45}.back{display:inline-block;color:#fff;text-decoration:none;margin-bottom:8px}
+</style>
+</head>
+<body>
+<main class="wrap">
+<a class="back" href="/dapur-v8.html">← Kembali ke Dapur</a>
+<div class="card">
+<h1>🖨️ Printer Dapur</h1>
+<div class="muted">ISSHO CAFE — tahap uji printer. Tidak mengubah order atau status pembayaran.</div>
+<div id="status" class="status warn">🟡 Belum ada printer terhubung</div>
+<div class="actions">
+<button id="serialBtn" class="blue">🔌 Hubungkan USB / Serial</button>
+<button id="usbBtn" class="gold">🔌 Hubungkan USB Printer</button>
+<button id="testBtn" class="green">🖨️ TEST PRINT</button>
+<button id="browserBtn" class="dark">🖨️ Cetak via Browser</button>
+</div>
+</div>
+<div class="card">
+<h2>Hasil Uji</h2>
+<pre id="log">1. Hubungkan WP58D.
+2. Tekan TEST PRINT.
+3. Jika printer mencetak, beri tahu saya bahwa test berhasil.
+
+Catatan: Bluetooth printer tidak selalu dapat dikendalikan langsung oleh browser. Jika Bluetooth tidak tersedia, kita lanjutkan dengan USB atau print bridge.</pre>
+</div>
+<div class="card">
+<h2>Contoh Struk</h2>
+<pre id="receipt">==============================
+       ISSHO CAFE
+       TEST PRINTER
+==============================
+
+Printer : WP58D
+Status  : TEST
+
+Tanggal : --/--/----
+Jam     : --:--:-- WIB
+
+==============================
+       TEST BERHASIL
+==============================
+</pre>
+</div>
+</main>
+<script>
+let serialPort=null,usbDevice=null;
+const $=id=>document.getElementById(id);
+function log(s){$('log').textContent+='\n'+s;$('log').scrollTop=$('log').scrollHeight}
+function setStatus(text,kind='warn'){$('status').className='status '+kind;$('status').textContent=text}
+function esc(s){return String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
+function receiptText(){const d=new Date();return `==============================\n       ISSHO CAFE\n       TEST PRINTER\n==============================\n\nPrinter : WP58D\nStatus  : TEST\n\nTanggal : ${d.toLocaleDateString('id-ID',{timeZone:'Asia/Jakarta'})}\nJam     : ${d.toLocaleTimeString('id-ID',{hour12:false,timeZone:'Asia/Jakarta'})} WIB\n\n==============================\n       TEST BERHASIL\n==============================\n\n`}
+$('serialBtn').onclick=async()=>{
+ if(!('serial' in navigator)){setStatus('🔴 Web Serial tidak didukung browser ini','err');log('Web Serial tidak tersedia. Gunakan Chrome/Edge desktop atau USB print bridge.');return}
+ try{serialPort=await navigator.serial.requestPort();await serialPort.open({baudRate:9600});setStatus('🟢 USB/Serial terhubung','ok');log('USB/Serial terhubung.');}catch(e){setStatus('🔴 Gagal menghubungkan USB/Serial','err');log('Error: '+e.message)}
+};
+$('usbBtn').onclick=async()=>{
+ if(!('usb' in navigator)){setStatus('🔴 WebUSB tidak didukung browser ini','err');log('WebUSB tidak tersedia.');return}
+ try{usbDevice=await navigator.usb.requestDevice({filters:[]});setStatus('🟢 USB terdeteksi: '+(usbDevice.productName||'Printer USB'),'ok');log('Perangkat USB dipilih: '+(usbDevice.productName||'tanpa nama')+'.');}catch(e){setStatus('🔴 USB tidak dipilih','err');log('Error: '+e.message)}
+};
+$('testBtn').onclick=async()=>{
+ const txt=receiptText();$('receipt').textContent=txt;
+ if(serialPort){try{const w=serialPort.writable.getWriter();await w.write(new TextEncoder().encode(txt+'\x1dV\x00'));w.releaseLock();setStatus('🟢 Test print dikirim ke USB/Serial','ok');log('TEST PRINT dikirim melalui USB/Serial. Cek kertas printer.');return}catch(e){log('USB/Serial gagal: '+e.message)}}
+ if(usbDevice){setStatus('🟡 USB terdeteksi, tetapi protokol printer belum dikenali','warn');log('Perangkat USB terdeteksi. Untuk mencetak langsung diperlukan konfigurasi interface/protokol WP58D.');return}
+ setStatus('🟡 Printer belum terhubung','warn');log('Belum ada koneksi printer aktif. Silakan hubungkan USB/Serial terlebih dahulu.');
+};
+$('browserBtn').onclick=()=>{const w=window.open('','_blank','width=420,height=700');if(!w)return;w.document.write('<html><head><title>ISSHO CAFE TEST PRINT</title><style>body{font-family:monospace;white-space:pre;text-align:center}button{padding:10px 20px;font-weight:bold}@media print{button{display:none}}</style></head><body><pre>'+esc(receiptText())+'</pre><button onclick="print()">PRINT</button></body></html>');w.document.close();w.focus()};
+</script>
+</body>
+</html>
