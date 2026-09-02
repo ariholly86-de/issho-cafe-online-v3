@@ -17,9 +17,11 @@ function clean(){
     }
     target.remove();
   });
+  const clock=d.getElementById('mr-clock');
+  if(clock)clock.remove();
 }
 clean();
 const f=document.getElementById('owner');
 if(f)f.addEventListener('load',()=>setTimeout(clean,100));
-setInterval(clean,1000);
+setInterval(clean,500);
 })();
