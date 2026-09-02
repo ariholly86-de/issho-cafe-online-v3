@@ -2,7 +2,8 @@ name: Normalize Minuman Images Parallel
 on:
   push:
     paths:
-      - '.github/workflows/normalize-minuman-parallel.yml'
+      - '.normalize-trigger'
+  workflow_dispatch:
 jobs:
   normalize:
     strategy:
