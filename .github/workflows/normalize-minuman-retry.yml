@@ -1,0 +1,19 @@
+name: Normalize Minuman Retry
+on:
+  push:
+    paths:
+      - '.normalize-trigger'
+jobs:
+  normalize:
+    strategy:
+      fail-fast: false
+      matrix:
+        offset: [100,180]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retry failed image batches
+        shell: bash
+        run: |
+          set -e
+          curl --fail --show-error --silent --max-time 900 "https://xvhimyflrqrdudijwjdn.supabase.co/functions/v1/run-minuman-normalizer?offset=${{ matrix.offset }}&limit=20"
+          echo
