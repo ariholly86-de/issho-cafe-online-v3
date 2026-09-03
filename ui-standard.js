@@ -1,9 +1,10 @@
-/* ISSHO CAFE — UI Standard v1.9 — Owner restore interaction fix + cashier expense detail */
+/* ISSHO CAFE — UI Standard v2.0 — Stock sales-out detail + existing UI fixes */
 (function(){
 'use strict';
 const isCanonicalOwner=!!document.getElementById('restore');
 const isOwner=/owner-rpp02n|OWNER/i.test(location.pathname+' '+document.title)||!!document.getElementById('owner');
 const isKasir=/staff-printer-universal|staff-v6|staff-alarm/i.test(location.pathname)||/KASIR/i.test(document.title)||!!document.getElementById('kasir');
+const isStock=/stock-v2/i.test(location.pathname)||/STOK/i.test(document.title);
 
 function removeRestoreControls(){
   document.querySelectorAll('button,a,[role="button"]').forEach(el=>{
@@ -26,6 +27,62 @@ if(isCanonicalOwner){
   };
   safety();
   setInterval(safety,500);
+  return;
+}
+
+/* Stock: add a detailed, read-only recap of goods that left because of cashier sales. */
+if(isStock){
+  const U='https://xvhimyflrqrdudijwjdn.supabase.co',K='sb_publishable_WHyroGN6czktqO5F8L4Xng_P7p5a3St';
+  const esc=s=>String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
+  const num=x=>Number(x||0).toLocaleString('id-ID',{maximumFractionDigits:3});
+  async function rpc(fn,body){const r=await fetch(U+'/rest/v1/rpc/'+fn,{method:'POST',cache:'no-store',headers:{apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},body:JSON.stringify(body)});const t=await r.text();if(!r.ok)throw Error(t||('HTTP '+r.status));return t?JSON.parse(t):null}
+  function pin(){try{if(typeof PIN!=='undefined'&&String(PIN).trim())return String(PIN).trim()}catch(e){}return String(document.getElementById('pin')?.value||'').trim()}
+  function day(){return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'})}
+  function installStockStyles(){
+    if(document.getElementById('issho-stock-detail-style'))return;
+    const s=document.createElement('style');s.id='issho-stock-detail-style';s.textContent=`.issho-stock-detail-btn{background:#242424!important;border:1px solid #555!important}.issho-stock-detail-card{background:#151515;border:1px solid #3b3b3b;border-radius:16px;padding:16px;margin:12px 0}.issho-stock-detail-card .detail-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}.issho-stock-detail-card .detail-title{font-size:20px;font-weight:900}.issho-stock-detail-card .detail-sub{color:#aaa;margin-top:4px}.issho-stock-detail-card .detail-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:14px}.issho-stock-detail-card .detail-tools input{background:#0e0e0e;color:#fff;border:1px solid #444;border-radius:10px;padding:10px}.issho-stock-detail-card .detail-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.issho-stock-detail-card .detail-stat{background:#1d1d1d;border:1px solid #383838;border-radius:12px;padding:12px}.issho-stock-detail-card .detail-stat span{display:block;color:#aaa;font-size:11px;font-weight:800}.issho-stock-detail-card .detail-stat b{display:block;font-size:22px;margin-top:4px}.issho-stock-detail-card table{width:100%;border-collapse:collapse;min-width:780px}.issho-stock-detail-card th,.issho-stock-detail-card td{padding:9px 8px;border-bottom:1px solid #303030;text-align:left;vertical-align:top}.issho-stock-detail-card th{font-size:11px;color:#aaa;text-transform:uppercase}.issho-stock-detail-card .r{text-align:right}.issho-stock-detail-card .detail-loading,.issho-stock-detail-card .detail-empty{padding:20px;text-align:center;color:#aaa}@media(max-width:760px){.issho-stock-detail-card .detail-summary{grid-template-columns:1fr}.issho-stock-detail-card .detail-head{align-items:flex-start}}`;(document.head||document.documentElement).appendChild(s);
+  }
+  function getContainer(){return document.getElementById('content')||document.querySelector('main#app')||document.body}
+  function ensureButton(){
+    let b=document.getElementById('isshoStockDetailButton');
+    const nav=document.querySelector('.secondary');
+    if(!nav)return null;
+    if(!b){b=document.createElement('button');b.id='isshoStockDetailButton';b.className='ghost issho-stock-detail-btn';b.type='button';b.textContent='📋 Detail Barang Laku';nav.appendChild(b)}
+    return b;
+  }
+  function renderShell(){
+    installStockStyles();
+    let box=document.getElementById('isshoStockDetail');
+    if(!box){box=document.createElement('div');box.id='isshoStockDetail';box.className='issho-stock-detail-card hide';const c=getContainer();c.appendChild(box)}
+    box.innerHTML=`<div class="detail-head"><div><div class="detail-title">📋 Detail Barang Keluar dari Penjualan Kasir</div><div class="detail-sub">Rincian barang yang benar-benar keluar karena transaksi kasir. Data diambil otomatis dari penjualan yang sudah PAID.</div></div></div><div class="detail-tools"><div><label style="display:block;font-size:11px;color:#aaa;font-weight:800;margin-bottom:5px">DARI TANGGAL</label><input id="isshoStockFrom" type="date" value="${day()}"></div><div><label style="display:block;font-size:11px;color:#aaa;font-weight:800;margin-bottom:5px">SAMPAI TANGGAL</label><input id="isshoStockTo" type="date" value="${day()}"></div><button class="primary" id="isshoStockLoad">🔎 Tampilkan Rincian</button></div><div id="isshoStockDetailOut" style="margin-top:14px"><div class="detail-loading">Pilih tanggal lalu tekan Tampilkan Rincian.</div></div>`;
+    box.querySelector('#isshoStockLoad').addEventListener('click',loadDetail);
+  }
+  async function loadDetail(){
+    const out=document.getElementById('isshoStockDetailOut'),p=pin();
+    if(!out)return;
+    if(!p){out.innerHTML='<div class="detail-empty">Silakan login Owner terlebih dahulu.</div>';return}
+    const from=document.getElementById('isshoStockFrom')?.value||day(),to=document.getElementById('isshoStockTo')?.value||from;
+    if(from>to){out.innerHTML='<div class="detail-empty">Tanggal awal tidak boleh lebih besar dari tanggal akhir.</div>';return}
+    out.innerHTML='<div class="detail-loading">⏳ Memuat rincian barang keluar...</div>';
+    try{
+      const r=await rpc('inventory_sales_detail',{p_owner_pin:p,p_from:from,p_to:to});
+      const detail=Array.isArray(r?.detail)?r.detail:[],lines=Array.isArray(r?.lines)?r.lines:[];
+      if(!detail.length){out.innerHTML='<div class="detail-empty">Tidak ada barang yang keluar dari penjualan kasir pada periode '+esc(from)+' s/d '+esc(to)+'.</div>';return}
+      const totalQty=detail.reduce((s,x)=>s+(Number(x.quantity)||0),0),orderSet=new Set(lines.map(x=>String(x.order_number||x.order_id||''))).size;
+      const grouped=detail.slice().sort((a,b)=>String(a.category||'').localeCompare(String(b.category||''),'id')||String(a.item_name||'').localeCompare(String(b.item_name||''),'id'));
+      const rows=grouped.map(x=>`<tr><td><b>${esc(x.item_name||'-')}</b></td><td>${esc(x.category||'Lainnya')}</td><td>${esc(x.unit||'pcs')}</td><td class="r"><b>${num(x.quantity)}</b></td><td class="r">${num(x.order_count)}</td><td>${esc(Array.isArray(x.menu_names)?x.menu_names.join(', '):(x.menu_names||'-'))}</td></tr>`).join('');
+      const lineRows=lines.slice().sort((a,b)=>String(a.sold_at||'').localeCompare(String(b.sold_at||''))).map(x=>`<tr><td>${esc(x.sold_at?new Date(x.sold_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'}):'-')}</td><td>${esc(x.order_number||'-')}</td><td>${esc(x.menu_name||'-')}</td><td><b>${esc(x.item_name||'-')}</b></td><td>${esc(x.category||'Lainnya')}</td><td>${esc(x.unit||'pcs')}</td><td class="r"><b>${num(x.quantity)}</b></td></tr>`).join('');
+      out.innerHTML=`<div class="detail-summary"><div class="detail-stat"><span>TOTAL BARANG KELUAR</span><b>${num(totalQty)}</b></div><div class="detail-stat"><span>JENIS BARANG</span><b>${num(detail.length)}</b></div><div class="detail-stat"><span>TRANSAKSI PENJUALAN</span><b>${num(orderSet)}</b></div></div><div style="margin-top:16px"><div style="font-weight:900;margin-bottom:8px">📦 Rekap per Barang</div><div class="tableWrap"><table><thead><tr><th>Nama Barang</th><th>Kategori</th><th>Satuan</th><th class="r">Jumlah Keluar</th><th class="r">Jumlah Order</th><th>Menu yang Menjual</th></tr></thead><tbody>${rows}</tbody></table></div></div><div style="margin-top:18px"><div style="font-weight:900;margin-bottom:8px">🧾 Rincian Setiap Penjualan</div><div class="tableWrap"><table><thead><tr><th>Waktu</th><th>No. Order</th><th>Menu Kasir</th><th>Barang Keluar</th><th>Kategori</th><th>Satuan</th><th class="r">Qty</th></tr></thead><tbody>${lineRows||'<tr><td colspan="7" class="detail-empty">Tidak ada detail transaksi.</td></tr>'}</tbody></table></div></div>`;
+    }catch(e){out.innerHTML='<div class="detail-empty">Gagal memuat rincian: '+esc(e.message)+'</div>'}
+  }
+  function toggle(){
+    const b=ensureButton();if(!b)return;
+    renderShell();const box=document.getElementById('isshoStockDetail');box.classList.toggle('hide');
+    if(!box.classList.contains('hide'))loadDetail();
+  }
+  function boot(){const b=ensureButton();if(b&&!b.dataset.bound){b.dataset.bound='1';b.addEventListener('click',toggle)}if(document.getElementById('isshoStockDetail')&&document.querySelector('[data-view="stock"]')?.classList.contains('on')){} }
+  boot();setInterval(boot,1000);
+  document.addEventListener('click',e=>{const t=e.target.closest('[data-view="stock"]');if(t)setTimeout(()=>{const b=ensureButton();if(b&&!b.dataset.bound){b.dataset.bound='1';b.addEventListener('click',toggle)}},200)});
   return;
 }
 
