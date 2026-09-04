@@ -25,37 +25,27 @@ function installSearch(doc,win){
   if(!input||!menu||!count)return;
   doc.documentElement.dataset.isshoCrossCategorySearch='1';
 
-  /* Run inside the deepest customer document so top-level lexical bindings
-     (products/categories) from customer-live-fixed.html are directly visible.
-     The previous win.products approach failed because those variables are
-     declared with top-level let and are not properties of window. */
+  /* Execute the search handler inside the deepest customer document. This is
+     required because products/categories are top-level lexical bindings and
+     are not guaranteed to exist as window.products/window.categories. */
   const script=doc.createElement('script');
-  script.textContent=`(function(){
-    const input=document.getElementById('search');
-    const menu=document.getElementById('menu');
-    const count=document.getElementById('count');
-    if(!input||!menu||!count)return;
-    const renderCrossCategorySearch=function(){
-      const q=String(input.value||'').toLowerCase().trim();
-      if(!q)return false;
-      const list=products.filter(p=>p.active===true
-        &&categories.some(c=>c.id===p.category_id&&c.active===true)
-        &&((p.name+' '+(p.description||'')).toLowerCase().includes(q)));
-      count.textContent='Hasil pencarian • '+list.length+' menu ditemukan';
-      menu.innerHTML=list.length?list.map(p=>`<div class="menu"><div class="photo">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" onerror="this.parentElement.innerHTML='🖼️ Gambar belum tersedia'">`:'🖼️ Gambar belum tersedia'}</div><h3>${esc(p.name)}</h3><div class="muted">${esc(p.description||'')}</div><div class="row" style="margin-top:auto"><b class="price">${money(p.price)}</b><button class="gold" onclick="add('${p.id}')">Tambah</button></div></div>`).join(''):`<div class="card">Menu yang dicari tidak ditemukan.</div>`;
-      return true;
-    };
-    input.addEventListener('input',function(e){
-      if(String(input.value||'').trim()){
-        e.stopImmediatePropagation();
-        renderCrossCategorySearch();
-      }
-    },true);
-    input.addEventListener('change',function(){
-      if(String(input.value||'').trim())renderCrossCategorySearch();
-    },true);
-    if(String(input.value||'').trim())renderCrossCategorySearch();
-  })();`;
+  script.textContent="(function(){\n"+
+    "const input=document.getElementById('search');\n"+
+    "const menu=document.getElementById('menu');\n"+
+    "const count=document.getElementById('count');\n"+
+    "if(!input||!menu||!count)return;\n"+
+    "function renderCrossCategorySearch(){\n"+
+      "const q=String(input.value||'').toLowerCase().trim();\n"+
+      "if(!q)return false;\n"+
+      "const list=products.filter(p=>p.active===true&&categories.some(c=>c.id===p.category_id&&c.active===true)&&((p.name+' '+(p.description||'')).toLowerCase().includes(q)));\n"+
+      "count.textContent='Hasil pencarian • '+list.length+' menu ditemukan';\n"+
+      "menu.innerHTML=list.length?list.map(p=>{const image=p.image_url?'<img src=\\\"'+esc(p.image_url)+'\\\" alt=\\\"'+esc(p.name)+'\\\" onerror=\\\"this.parentElement.innerHTML=\\\'🖼️ Gambar belum tersedia\\\'\\\">':'🖼️ Gambar belum tersedia';return '<div class=\\\"menu\\\"><div class=\\\"photo\\\">'+image+'</div><h3>'+esc(p.name)+'</h3><div class=\\\"muted\\\">'+esc(p.description||'')+'</div><div class=\\\"row\\\" style=\\\"margin-top:auto\\\"><b class=\\\"price\\\">'+money(p.price)+'</b><button class=\\\"gold\\\" onclick=\\\"add(\\\''+p.id+'\\\')\\\">Tambah</button></div></div>';}).join(''):'<div class=\\\"card\\\">Menu yang dicari tidak ditemukan.</div>';\n"+
+      "return true;\n"+
+    "}\n"+
+    "input.addEventListener('input',function(e){if(String(input.value||'').trim()){e.stopImmediatePropagation();renderCrossCategorySearch();}},true);\n"+
+    "input.addEventListener('change',function(){if(String(input.value||'').trim())renderCrossCategorySearch();},true);\n"+
+    "if(String(input.value||'').trim())renderCrossCategorySearch();\n"+
+  "})();";
   (doc.head||doc.documentElement).appendChild(script);
 }
 
