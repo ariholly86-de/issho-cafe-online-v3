@@ -52,14 +52,23 @@ f.addEventListener('load',()=>{
         .cash-reminder-v6 .icon{width:74px;height:74px;border-radius:50%;background:#dff6e6;color:#14823b;margin:0 auto 8px;display:grid;place-items:center;font-size:37px}
         .cash-reminder-v6 h2{font-size:25px;line-height:1.2;margin:0 0 5px;color:#111}.cash-reminder-v6 .method{font-size:16px;color:#444;margin-bottom:14px}
         .cash-reminder-v6 .box{border-radius:13px;padding:14px;margin-top:10px}.cash-reminder-v6 .order{background:#f2f4f7}.cash-reminder-v6 .label{font-size:15px;color:#555;margin-bottom:5px}.cash-reminder-v6 .order-no{font-size:22px;font-weight:900;word-break:break-word}.cash-reminder-v6 .time{font-size:14px;color:#555;margin-top:6px}
+        .cash-reminder-v6 .table-inline{margin-top:12px;padding-top:10px;border-top:1px solid #d9dde2;text-align:left}.cash-reminder-v6 .table-inline .table-label{font-size:14px;color:#555;margin-bottom:3px}.cash-reminder-v6 .table-inline .table-no{font-size:25px;font-weight:900;line-height:1.15;color:#111}
         .cash-reminder-v6 .warning{background:#ffe9e7;color:#d71920}.cash-reminder-v6 .warning .big{font-size:22px;font-weight:900;line-height:1.18}.cash-reminder-v6 .warning p{color:#222;font-size:15px;line-height:1.45;margin:10px 0 0}
         .cash-reminder-v6 .instruction{background:#fff2cf;text-align:left;font-size:15px;line-height:1.4}.cash-reminder-v6 .instruction strong{display:block;font-size:16px;margin-bottom:4px}.cash-reminder-v6 .total{background:#f2f4f7;text-align:left}.cash-reminder-v6 .total small{display:block;color:#555;font-size:14px}.cash-reminder-v6 .total b{display:block;font-size:31px;line-height:1.1;margin-top:2px}
         .cash-reminder-v6 button{width:100%;margin-top:12px;background:#8a4f13;color:#fff;border:0;border-radius:13px;padding:16px 14px;font-size:17px;font-weight:900;cursor:pointer}.cash-reminder-v6 .thanks{font-size:14px;color:#666;margin-top:12px}
-        @media(max-width:600px){.cash-reminder-v6{padding:14px}.cash-reminder-v6 h2{font-size:21px}.cash-reminder-v6 .icon{width:64px;height:64px;font-size:31px}.cash-reminder-v6 .order-no{font-size:18px}.cash-reminder-v6 .warning .big{font-size:19px}.cash-reminder-v6 .warning p{font-size:14px}.cash-reminder-v6 .total b{font-size:27px}}
+        @media(max-width:600px){.cash-reminder-v6{padding:14px}.cash-reminder-v6 h2{font-size:21px}.cash-reminder-v6 .icon{width:64px;height:64px;font-size:31px}.cash-reminder-v6 .order-no{font-size:18px}.cash-reminder-v6 .table-inline .table-no{font-size:21px}.cash-reminder-v6 .warning .big{font-size:19px}.cash-reminder-v6 .warning p{font-size:14px}.cash-reminder-v6 .total b{font-size:27px}}
       `;
       d.head.appendChild(css);
 
       const escSafe=s=>String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
+      const getTableText=()=>{
+        const fromUrl=new URLSearchParams(location.search).get('table');
+        const tn=d.getElementById('tn');
+        const fromDom=(tn?.textContent||'').trim();
+        const raw=String(fromUrl||fromDom||'').trim();
+        if(!raw)return '';
+        return /^meja\s/i.test(raw)?raw:'Meja '+raw;
+      };
 
       function showPopup(){
         const result=d.getElementById('result');
@@ -69,6 +78,7 @@ f.addEventListener('load',()=>{
         if(!match)return false;
         const order=match[1];
         const total=(text.match(/Total\s+(Rp\s*[\d.]+)/i)||[])[1]||(d.getElementById('tot')?.textContent||'Rp0');
+        const tableText=getTableText();
         const now=new Date();
         const date=new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'long',year:'numeric',timeZone:'Asia/Jakarta'}).format(now);
         const time=new Intl.DateTimeFormat('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'Asia/Jakarta'}).format(now)+' WIB';
@@ -78,7 +88,7 @@ f.addEventListener('load',()=>{
           <div class="icon">💵</div>
           <h2>Pesanan Anda Berhasil Dibuat</h2>
           <div class="method">Metode Pembayaran: <b>Tunai</b></div>
-          <div class="box order"><div class="label">Nomor Order</div><div class="order-no">${escSafe(order)}</div><div class="time">${escSafe(date)} • ${escSafe(time)}</div></div>
+          <div class="box order"><div class="label">Nomor Order</div><div class="order-no">${escSafe(order)}</div><div class="time">${escSafe(date)} • ${escSafe(time)}</div>${tableText?`<div class="table-inline"><div class="table-label">Nomor Meja</div><div class="table-no">${escSafe(tableText)}</div></div>`:''}</div>
           <div class="box warning"><div class="big">Silakan lakukan pembayaran di meja kasir</div><p>Untuk pembayaran TUNAI, pesanan Anda <b>belum dapat diproses oleh dapur</b> sebelum pembayaran diterima oleh kasir.</p></div>
           <div class="box instruction"><strong>👤 Silakan datang ke meja kasir</strong>Sebutkan <b>nomor order</b> Anda kepada kasir agar pembayaran dapat segera diproses.</div>
           <div class="box total"><small>Total yang harus dibayar</small><b>${escSafe(total)}</b></div>
@@ -96,10 +106,7 @@ f.addEventListener('load',()=>{
         ev.stopImmediatePropagation();
         const place=w.place;
         if(typeof place!=='function')return;
-        const before=d.getElementById('result')?.textContent||'';
         try{await place.call(w,'CASH')}catch(e){console.warn('ISSHO cash completion wrapper error:',e)}
-        /* The order can already be successfully created even if the older UI wrapper
-           throws while building its popup. Always inspect the actual result. */
         let shown=showPopup();
         if(!shown){
           let tries=0;
