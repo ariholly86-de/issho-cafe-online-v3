@@ -29,28 +29,44 @@ f.addEventListener('load',()=>{
       const c=getCustomer();
       if(!c||!c.doc.body)return false;
       const d=c.doc;
-      if(d.documentElement.dataset.isshoTablePopupFix==='2')return true;
-      d.documentElement.dataset.isshoTablePopupFix='2';
+      if(d.documentElement.dataset.isshoTablePopupFix==='4')return true;
+      d.documentElement.dataset.isshoTablePopupFix='4';
       const css=d.createElement('style');
       css.textContent=`
-        /* RAPATKAN NAMA MENU DAN HARGA - berlaku untuk semua kartu menu */
-        #menu .menu{min-height:0!important;height:auto!important}
-        #menu .menu h3{margin:4px 0 3px!important;line-height:1.2!important}
-        #menu .menu>.muted{min-height:0!important;margin:0!important;line-height:1.25!important}
-        #menu .menu>.row{margin-top:6px!important;flex:0 0 auto!important}
-        #menu .menu .price{line-height:1.15!important}
+        /* MENU: nama dan harga dibuat benar-benar berdekatan untuk SEMUA menu */
+        #menu .menu{display:flex!important;flex-direction:column!important;min-height:0!important;height:auto!important;overflow:hidden!important}
+        #menu .menu h3{margin:1px 0 0!important;padding:0!important;line-height:1.15!important}
+        #menu .menu>.muted{min-height:0!important;height:auto!important;margin:0!important;padding:0!important;line-height:1.05!important}
+        #menu .menu>.row{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;flex:0 0 auto!important;align-items:center!important}
+        #menu .menu .price{margin:0!important;padding:0!important;line-height:1.1!important}
         @media(max-width:600px){
           #menu .menu{min-height:0!important;height:auto!important}
-          #menu .menu h3{margin:3px 0 2px!important}
-          #menu .menu>.row{margin-top:5px!important}
+          #menu .menu h3{font-size:14px!important;margin:1px 0 0!important;line-height:1.1!important}
+          #menu .menu>.muted{font-size:11px!important;line-height:1!important}
+          #menu .menu>.row{margin-top:0!important}
+          #menu .menu .price{font-size:14px!important;line-height:1.05!important}
         }
-
-        .cash-reminder-v6 .table-inline{margin-top:12px;padding-top:10px;border-top:1px solid #d9dde2}
-        .cash-reminder-v6 .table-inline .table-label{font-size:14px;color:#555;margin-bottom:3px}
-        .cash-reminder-v6 .table-inline .table-no{font-size:25px;font-weight:900;line-height:1.15;color:#111}
-        @media(max-width:600px){.cash-reminder-v6 .table-inline .table-no{font-size:21px}}
       `;
       d.head.appendChild(css);
+
+      /* Directly remove any old inline margin:auto so the price cannot be pushed to the bottom. */
+      const tightenMenus=()=>{
+        d.querySelectorAll('#menu .menu').forEach(menu=>{
+          menu.style.setProperty('min-height','0','important');
+          menu.style.setProperty('height','auto','important');
+          const title=menu.querySelector('h3');
+          const desc=menu.querySelector(':scope > .muted');
+          const row=menu.querySelector(':scope > .row');
+          if(title){title.style.setProperty('margin','1px 0 0','important');title.style.setProperty('padding','0','important');}
+          if(desc){desc.style.setProperty('margin','0','important');desc.style.setProperty('padding','0','important');desc.style.setProperty('min-height','0','important');}
+          if(row){row.style.setProperty('margin-top','0','important');row.style.setProperty('margin-bottom','0','important');row.style.setProperty('padding-top','0','important');}
+        });
+      };
+      tightenMenus();
+      const menuObserver=new MutationObserver(tightenMenus);
+      const menuRoot=d.getElementById('menu');
+      if(menuRoot)menuObserver.observe(menuRoot,{childList:true,subtree:true});
+
       const addTable=()=>{
         const popup=d.querySelector('.cash-reminder-v6');
         if(!popup||popup.querySelector('.table-inline'))return;
@@ -79,7 +95,7 @@ f.addEventListener('load',()=>{
       const timer=setInterval(()=>{if(install())clearInterval(timer)},200);
       setTimeout(()=>clearInterval(timer),20000);
     }
-  }catch(e){console.warn('ISSHO table popup fix failed',e)}
+  }catch(e){console.warn('ISSHO table/menu fix failed',e)}
 });
 </script>
 </body>
