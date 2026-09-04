@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate"><meta http-equiv="Pragma"><meta http-equiv="Expires" content="0">
 <title>ISSHO CAFE — Menu Pelanggan</title>
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080909}iframe{width:100%;height:100%;border:0;display:block}</style>
 </head>
@@ -16,8 +16,9 @@ if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
 
-/* CUSTOMER ONLY: static menu display. The catalog's 1-second polling is
-   disabled after the first menu render so cards/images cannot jump or blink. */
+/* CUSTOMER ONLY: static menu display. The catalog is no longer polled by
+   this wrapper. The parent customer page freezes the actual catalog timer
+   after the first render. */
 function installMenu(doc,win){
   if(!doc||!doc.body)return false;
   const apply=()=>{
@@ -130,9 +131,8 @@ function walk(doc,win,depth=0){
   }catch(e){}
 }
 f.addEventListener('load',()=>{
+  /* Load-event traversal is sufficient; no repeating wrapper timer is used. */
   walk(f.contentDocument,f.contentWindow);
-  const t=setInterval(()=>walk(f.contentDocument,f.contentWindow),300);
-  setTimeout(()=>clearInterval(t),30000);
 });
 </script>
 </body>
