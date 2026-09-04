@@ -1,0 +1,38 @@
+name: Add Manual QRIS Button
+on:
+  push:
+    paths:
+      - '.github/workflows/add-manual-qris-button.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch cashier
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('staff-v6.html')
+          s=p.read_text(encoding='utf-8')
+          old="<button class=\"green\" onclick=\"verify('${o.id}',true)\">✓ Verifikasi QRIS</button><button class=\"red\" onclick=\"verify('${o.id}',false)\">Tolak</button>"
+          new="<button class=\"green\" onclick=\"verify('${o.id}',true)\">✓ Verifikasi QRIS</button><button class=\"gold\" onclick=\"manualQris('${o.id}')\">✓ Terima QRIS Manual</button><button class=\"red\" onclick=\"verify('${o.id}',false)\">Tolak</button>"
+          if old not in s:
+              raise SystemExit('target button markup not found')
+          s=s.replace(old,new,1)
+          marker="async function paid(id){try{await api('/rest/v1/rpc/staff_mark_paid',{method:'POST',body:JSON.stringify({p_pin:P,p_order_id:id})});loadOrders()}catch(e){alert(e.message)}}"
+          fn="async function manualQris(id){const o=ORD.find(x=>x.id===id);if(!o)return;if(!confirm('Pastikan pembayaran QRIS sudah benar-benar masuk di M-Banking.\\n\\nTerima pembayaran QRIS secara manual dan lanjutkan order ke Dapur?'))return;try{await api('/rest/v1/rpc/staff_mark_paid',{method:'POST',body:JSON.stringify({p_pin:P,p_order_id:id})});alert('✓ Pembayaran QRIS diterima manual. Order sekarang PAID dan dapat diproses Dapur.');loadOrders()}catch(e){alert('Gagal menerima QRIS manual: '+e.message)}}"
+          if marker not in s:
+              raise SystemExit('paid function marker not found')
+          s=s.replace(marker,marker+'\n'+fn,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add staff-v6.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Add manual QRIS acceptance button'
+          git push
