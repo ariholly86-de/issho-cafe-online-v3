@@ -11,10 +11,81 @@
 <script>
 const f=document.getElementById('app');
 const qs=new URLSearchParams(location.search);
-const src=new URL('customer-ui-v6.html?v=20260904-menu-tight-2',location.href);
+const src=new URL('customer-ui-v6.html?v=20260904-image-500x500-jpg85',location.href);
 if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
+
+/* CUSTOMER IMAGE STANDARD:
+   Every menu image displayed to the customer is normalized to exactly
+   500x500 px, JPEG, quality 85%. The original menu/database image is not
+   overwritten; only the customer-facing image representation is replaced. */
+function normalizeImage(img){
+  try{
+    if(!img || !img.src || img.src.startsWith('blob:'))return;
+    const src=img.currentSrc||img.src;
+    if(!src || img.dataset.image500x500==='done' || img.dataset.image500x500===src)return;
+    img.dataset.image500x500=src;
+    const run=async()=>{
+      try{
+        const res=await fetch(src,{mode:'cors',cache:'force-cache'});
+        if(!res.ok)throw new Error('image fetch '+res.status);
+        const blob=await res.blob();
+        const bmp=await createImageBitmap(blob);
+        const canvas=document.createElement('canvas');
+        canvas.width=500;canvas.height=500;
+        const ctx=canvas.getContext('2d');
+        ctx.fillStyle='#000';ctx.fillRect(0,0,500,500);
+        const scale=Math.min(500/bmp.width,500/bmp.height);
+        const w=Math.max(1,Math.round(bmp.width*scale));
+        const h=Math.max(1,Math.round(bmp.height*scale));
+        const x=Math.round((500-w)/2),y=Math.round((500-h)/2);
+        ctx.drawImage(bmp,x,y,w,h);
+        bmp.close();
+        const out=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('toBlob failed')),'image/jpeg',0.85));
+        const url=URL.createObjectURL(out);
+        img.src=url;
+        img.width=500;img.height=500;
+        img.dataset.image500x500='done';
+      }catch(e){
+        /* Keep the original image if the storage host does not permit CORS. */
+        img.dataset.image500x500='failed';
+      }
+    };
+    if(img.complete&&img.naturalWidth)run();else img.addEventListener('load',run,{once:true});
+  }catch(e){}
+}
+
+function installImageStandard(doc){
+  if(!doc||!doc.body)return false;
+  const scan=()=>doc.querySelectorAll('#menu .photo img').forEach(normalizeImage);
+  scan();
+  if(!doc.documentElement.dataset.isshoImageStandard){
+    doc.documentElement.dataset.isshoImageStandard='500x500-jpg85';
+    const menu=doc.getElementById('menu');
+    if(menu)new MutationObserver(scan).observe(menu,{childList:true,subtree:true});
+  }
+  return true;
+}
+
+function install(){
+  try{
+    const d=f.contentDocument;
+    if(!d)return false;
+    const inner=d.querySelector('iframe#app');
+    if(!inner||!inner.contentDocument)return false;
+    const customerDoc=inner.contentDocument;
+    if(installImageStandard(customerDoc))return true;
+  }catch(e){}
+  return false;
+}
+
+f.addEventListener('load',()=>{
+  if(!install()){
+    const timer=setInterval(()=>{if(install())clearInterval(timer)},200);
+    setTimeout(()=>clearInterval(timer),30000);
+  }
+});
 </script>
 </body>
 </html>
