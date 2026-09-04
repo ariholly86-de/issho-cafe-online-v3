@@ -5,25 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <meta http-equiv="Cache-Control" content="no-store">
-  <title>ISSHO CAFE — DAPUR</title>
-  <style>html,body{margin:0;height:100%;background:#0b0b0b;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center}.box{text-align:center;padding:24px}.spin{font-size:40px;margin-bottom:12px}.muted{color:#aaa;font-size:14px}a{color:#d5a15d}</style>
+  <title>ISSHO CAFE — DAPUR + PRINTER + ALARM</title>
+  <style>html,body{margin:0;height:100%;background:#0b0b0b;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center}.box{text-align:center;padding:24px;max-width:520px}.spin{font-size:40px;margin-bottom:12px}.muted{color:#aaa;font-size:14px;line-height:1.5}.open{display:inline-block;margin-top:20px;padding:15px 24px;border-radius:12px;background:#2f8b59;color:#fff;text-decoration:none;font-weight:900;font-size:17px}.web{display:inline-block;margin-top:12px;color:#d5a15d;text-decoration:none;font-size:14px}</style>
 </head>
 <body>
   <div class="box">
-    <div class="spin">🍳</div>
+    <div class="spin">🍳🖨️🔔</div>
     <h2>ISSHO CAFE — DAPUR</h2>
-    <div class="muted">Membuka dashboard Dapur & koneksi printer…</div>
-    <div class="muted" style="margin-top:14px"><a id="fallback" href="/dapur-v8.html?v=20260904-single-link">Buka Dashboard Dapur</a></div>
+    <div class="muted">Dapur + Auto Print + Alarm</div>
+    <div class="muted" style="margin-top:10px">Tekan tombol di bawah untuk membuka aplikasi Dapur & Printer. Jangan gunakan tombol Hubungkan Printer dari Chrome Android.</div>
+    <a class="open" id="openApp" href="intent://dapur/#Intent;scheme=isshocafe;package=com.isshocafe.printerbridge;S.browser_fallback_url=https%3A%2F%2Fissho-cafe-online-v3.vercel.app%2Fdapur-v8.html%3Fv%3D20260904-gabungan;end">🚀 BUKA DAPUR + PRINTER</a>
+    <br>
+    <a class="web" href="/dapur-v8.html?v=20260904-gabungan">Buka Dapur versi web</a>
   </div>
-<script>
-(function(){
-  var fallback='/dapur-v8.html?v=20260904-single-link';
-  var ua=navigator.userAgent||'';
-  if(!/Android/i.test(ua)){location.replace(fallback);return;}
-  var timer=setTimeout(function(){location.replace(fallback)},1800);
-  document.getElementById('fallback').addEventListener('click',function(){clearTimeout(timer)});
-  try{location.href='isshocafe://dapur'}catch(e){}
-})();
-</script>
 </body>
 </html>
