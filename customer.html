@@ -11,7 +11,7 @@
 <script>
 const f=document.getElementById('app');
 const qs=new URLSearchParams(location.search);
-const src=new URL('customer-ui-v6.html?v=20260904-static-stable-images',location.href);
+const src=new URL('customer-ui-v6.html?v=20260904-steak-size-fix',location.href);
 if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
@@ -81,7 +81,9 @@ function install(doc,win){
       img.style.setProperty('display','block','important');
       img.style.setProperty('transition','none','important');
       img.style.setProperty('animation','none','important');
-      img.style.setProperty('transform','none','important');
+      const name=(img.getAttribute('alt')||'').toLowerCase();
+      img.style.setProperty('transform',name.includes('steak')?'scale(1.35)':'none','important');
+      img.style.setProperty('transform-origin','center center','important');
       img.setAttribute('width','500');
       img.setAttribute('height','500');
       img.setAttribute('decoding','sync');
