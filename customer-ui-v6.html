@@ -11,91 +11,79 @@
 <script>
 const f=document.getElementById('app');
 const qs=new URLSearchParams(location.search);
-const src=new URL('customer-ui-v5.html?v=20260904-cash-popup-v7',location.href);
+const src=new URL('customer-ui-v5.html?v=20260904-customer-simple-menu',location.href);
 if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
 
-f.addEventListener('load',()=>{
-  try{
-    const outer=f.contentDocument;
-    if(!outer)return;
-    const getCustomer=()=>{
-      const inner=outer.querySelector('iframe#app');
-      if(!inner||!inner.contentDocument)return null;
-      return {doc:inner.contentDocument,win:inner.contentWindow};
-    };
-    const install=()=>{
-      const c=getCustomer();
-      if(!c||!c.doc.body)return false;
-      const d=c.doc;
-      if(d.documentElement.dataset.isshoTablePopupFix==='4')return true;
-      d.documentElement.dataset.isshoTablePopupFix='4';
-      const css=d.createElement('style');
+/* CUSTOMER ONLY: one clean line for menu information: image -> name -> price.
+   The old description is hidden because in many menu records it duplicates the name. */
+function installMenu(doc,win){
+  if(!doc||!doc.body)return false;
+  const apply=()=>{
+    const menus=doc.querySelectorAll('#menu .menu');
+    if(!menus.length)return false;
+    const cssId='issho-customer-simple-menu-style';
+    if(!doc.getElementById(cssId)){
+      const css=doc.createElement('style');css.id=cssId;
       css.textContent=`
-        /* MENU: nama dan harga dibuat benar-benar berdekatan untuk SEMUA menu */
         #menu .menu{display:flex!important;flex-direction:column!important;min-height:0!important;height:auto!important;overflow:hidden!important}
-        #menu .menu h3{margin:1px 0 0!important;padding:0!important;line-height:1.15!important}
-        #menu .menu>.muted{min-height:0!important;height:auto!important;margin:0!important;padding:0!important;line-height:1.05!important}
-        #menu .menu>.row{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;flex:0 0 auto!important;align-items:center!important}
-        #menu .menu .price{margin:0!important;padding:0!important;line-height:1.1!important}
+        #menu .menu>.photo{order:1!important;flex:0 0 auto!important;margin-bottom:5px!important}
+        #menu .menu>h3{order:2!important;display:block!important;font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:700!important;line-height:1.15!important;margin:0!important;padding:0!important;color:#fff!important;min-height:0!important}
+        #menu .menu>.muted{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important}
+        #menu .menu>.row{order:3!important;display:flex!important;flex:0 0 auto!important;margin:1px 0 0!important;padding:0!important;align-items:center!important}
+        #menu .menu .price{font-family:Arial,sans-serif!important;font-size:18px!important;font-weight:900!important;line-height:1.1!important;margin:0!important;padding:0!important;color:#fff!important}
+        #menu .menu .gold{flex:0 0 auto!important}
+        #menu .cat{font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:700!important}
         @media(max-width:600px){
-          #menu .menu{min-height:0!important;height:auto!important}
-          #menu .menu h3{font-size:14px!important;margin:1px 0 0!important;line-height:1.1!important}
-          #menu .menu>.muted{font-size:11px!important;line-height:1!important}
-          #menu .menu>.row{margin-top:0!important}
-          #menu .menu .price{font-size:14px!important;line-height:1.05!important}
+          #menu .menu>.photo{margin-bottom:4px!important}
+          #menu .menu>h3{font-size:14px!important;font-weight:700!important;line-height:1.1!important;margin:0!important}
+          #menu .menu>.row{margin-top:1px!important}
+          #menu .menu .price{font-size:16px!important;font-weight:900!important;line-height:1.05!important}
         }
       `;
-      d.head.appendChild(css);
-
-      /* Directly remove any old inline margin:auto so the price cannot be pushed to the bottom. */
-      const tightenMenus=()=>{
-        d.querySelectorAll('#menu .menu').forEach(menu=>{
-          menu.style.setProperty('min-height','0','important');
-          menu.style.setProperty('height','auto','important');
-          const title=menu.querySelector('h3');
-          const desc=menu.querySelector(':scope > .muted');
-          const row=menu.querySelector(':scope > .row');
-          if(title){title.style.setProperty('margin','1px 0 0','important');title.style.setProperty('padding','0','important');}
-          if(desc){desc.style.setProperty('margin','0','important');desc.style.setProperty('padding','0','important');desc.style.setProperty('min-height','0','important');}
-          if(row){row.style.setProperty('margin-top','0','important');row.style.setProperty('margin-bottom','0','important');row.style.setProperty('padding-top','0','important');}
-        });
-      };
-      tightenMenus();
-      const menuObserver=new MutationObserver(tightenMenus);
-      const menuRoot=d.getElementById('menu');
-      if(menuRoot)menuObserver.observe(menuRoot,{childList:true,subtree:true});
-
-      const addTable=()=>{
-        const popup=d.querySelector('.cash-reminder-v6');
-        if(!popup||popup.querySelector('.table-inline'))return;
-        const order=popup.querySelector('.order');
-        const tn=d.getElementById('tn');
-        if(!order||!tn)return;
-        const tableText=(tn.textContent||'').trim();
-        if(!tableText)return;
-        const wrap=d.createElement('div');
-        wrap.className='table-inline';
-        const label=d.createElement('div');
-        label.className='table-label';
-        label.textContent='Nomor Meja';
-        const no=d.createElement('div');
-        no.className='table-no';
-        no.textContent=tableText;
-        wrap.append(label,no);
-        order.appendChild(wrap);
-      };
-      const observer=new MutationObserver(addTable);
-      observer.observe(d.body,{childList:true,subtree:true});
-      addTable();
-      return true;
-    };
-    if(!install()){
-      const timer=setInterval(()=>{if(install())clearInterval(timer)},200);
-      setTimeout(()=>clearInterval(timer),20000);
+      doc.head.appendChild(css);
     }
-  }catch(e){console.warn('ISSHO table/menu fix failed',e)}
+    menus.forEach(menu=>{
+      menu.style.setProperty('min-height','0','important');
+      menu.style.setProperty('height','auto','important');
+      menu.style.setProperty('display','flex','important');
+      menu.style.setProperty('flex-direction','column','important');
+      const title=menu.querySelector(':scope > h3');
+      const desc=menu.querySelector(':scope > .muted');
+      const row=menu.querySelector(':scope > .row');
+      if(title){title.style.setProperty('font-family','Arial,sans-serif','important');title.style.setProperty('font-size','14px','important');title.style.setProperty('font-weight','700','important');title.style.setProperty('line-height','1.15','important');title.style.setProperty('margin','0','important');title.style.setProperty('padding','0','important')}
+      if(desc){desc.style.setProperty('display','none','important');desc.style.setProperty('height','0','important');desc.style.setProperty('min-height','0','important');desc.style.setProperty('margin','0','important');desc.style.setProperty('padding','0','important')}
+      if(row){row.style.setProperty('margin-top','1px','important');row.style.setProperty('margin-bottom','0','important');row.style.setProperty('padding','0','important');row.style.setProperty('flex','0 0 auto','important')}
+      const price=menu.querySelector('.price');
+      if(price){price.style.setProperty('font-family','Arial,sans-serif','important');price.style.setProperty('font-size',win&&win.innerWidth<=600?'16px':'18px','important');price.style.setProperty('font-weight','900','important');price.style.setProperty('line-height','1.1','important');price.style.setProperty('margin','0','important');price.style.setProperty('padding','0','important')}
+    });
+    return true;
+  };
+  apply();
+  const root=doc.getElementById('menu');
+  if(root&&!root.dataset.isshoSimpleMenuObserver){
+    root.dataset.isshoSimpleMenuObserver='1';
+    new MutationObserver(apply).observe(root,{childList:true,subtree:true});
+  }
+  return true;
+}
+function walk(doc,win,depth=0){
+  if(!doc||depth>8)return;
+  try{
+    if(doc.getElementById('menu'))installMenu(doc,win);
+    doc.querySelectorAll('iframe').forEach(fr=>{
+      try{
+        if(fr.contentDocument)walk(fr.contentDocument,fr.contentWindow,depth+1);
+        fr.addEventListener('load',()=>{try{walk(fr.contentDocument,fr.contentWindow,depth+1)}catch(e){}},{once:true});
+      }catch(e){}
+    });
+  }catch(e){}
+}
+f.addEventListener('load',()=>{
+  walk(f.contentDocument,f.contentWindow);
+  const t=setInterval(()=>walk(f.contentDocument,f.contentWindow),300);
+  setTimeout(()=>clearInterval(t),30000);
 });
 </script>
 </body>
