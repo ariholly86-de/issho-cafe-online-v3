@@ -48,11 +48,12 @@ function install(doc,win){
       }
       const title=menu.querySelector(':scope > h3');
       if(title){
+        title.style.setProperty('font-family','Arial, sans-serif','important');
         title.style.setProperty('margin','2px 0 2px','important');
         title.style.setProperty('padding','0','important');
         title.style.setProperty('line-height','1.15','important');
-        title.style.setProperty('font-size','14px','important');
-        title.style.setProperty('font-weight','700','important');
+        title.style.setProperty('font-size','12px','important');
+        title.style.setProperty('font-weight','500','important');
         title.style.setProperty('min-height','0','important');
       }
       const desc=menu.querySelector(':scope > .muted');
