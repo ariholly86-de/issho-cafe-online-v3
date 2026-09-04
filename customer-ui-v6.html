@@ -16,9 +16,35 @@ if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
 
-/* CUSTOMER ONLY: static menu display. The catalog is no longer polled by
-   this wrapper. The parent customer page freezes the actual catalog timer
-   after the first render. */
+/* CUSTOMER ONLY: static menu display. */
+function installSearch(doc,win){
+  if(!doc||!win||doc.documentElement.dataset.isshoCrossCategorySearch)return;
+  const input=doc.getElementById('search');
+  const menu=doc.getElementById('menu');
+  const count=doc.getElementById('count');
+  if(!input||!menu||!count)return;
+  if(typeof win.products==='undefined'||typeof win.categories==='undefined')return;
+  doc.documentElement.dataset.isshoCrossCategorySearch='1';
+  const renderSearch=()=>{
+    const q=String(input.value||'').toLowerCase().trim();
+    if(!q)return false;
+    const list=win.products.filter(p=>p.active===true&&win.categories.some(c=>c.id===p.category_id&&c.active===true)&&((p.name+' '+(p.description||'')).toLowerCase().includes(q)));
+    count.textContent='Hasil pencarian • '+list.length+' menu ditemukan';
+    menu.innerHTML=list.length?list.map(p=>`<div class="menu"><div class="photo">${p.image_url?`<img src="${win.esc(p.image_url)}" alt="${win.esc(p.name)}" onerror="this.parentElement.innerHTML='🖼️ Gambar belum tersedia'">`:'🖼️ Gambar belum tersedia'}</div><h3>${win.esc(p.name)}</h3><div class="muted">${win.esc(p.description||'')}</div><div class="row" style="margin-top:auto"><b class="price">${win.money(p.price)}</b><button class="gold" onclick="add('${p.id}')">Tambah</button></div></div>`).join(''):`<div class="card">Menu yang dicari tidak ditemukan.</div>`;
+    return true;
+  };
+  /* Capture phase prevents the original category-limited oninput=renderMenu
+     handler in customer-live-fixed.html from overwriting the search result. */
+  input.addEventListener('input',e=>{
+    if(String(input.value||'').trim()){
+      e.stopImmediatePropagation();
+      renderSearch();
+    }
+  },true);
+  input.addEventListener('change',()=>{if(String(input.value||'').trim())renderSearch()},true);
+  if(String(input.value||'').trim())renderSearch();
+}
+
 function installMenu(doc,win){
   if(!doc||!doc.body)return false;
   const apply=()=>{
@@ -97,6 +123,7 @@ function installMenu(doc,win){
     root.dataset.isshoSimpleMenuObserver='1';
     new MutationObserver(apply).observe(root,{childList:true,subtree:true});
   }
+  installSearch(doc,win);
   return ok;
 }
 
@@ -130,10 +157,7 @@ function walk(doc,win,depth=0){
     });
   }catch(e){}
 }
-f.addEventListener('load',()=>{
-  /* Load-event traversal is sufficient; no repeating wrapper timer is used. */
-  walk(f.contentDocument,f.contentWindow);
-});
+f.addEventListener('load',()=>walk(f.contentDocument,f.contentWindow));
 </script>
 </body>
 </html>
