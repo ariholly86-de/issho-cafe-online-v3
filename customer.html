@@ -4,14 +4,14 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <title>ISSHO CAFE — Menu Pelanggan</title>
-<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0b0b}iframe{width:100%;height:100%;border:0;display:block}</style>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080909}iframe{width:100%;height:100%;border:0;display:block}</style>
 </head>
 <body>
 <iframe id="app" title="ISSHO CAFE Menu Pelanggan"></iframe>
 <script>
 const f=document.getElementById('app');
 const qs=new URLSearchParams(location.search);
-const src=new URL('customer-ui-v2.html?v=20260904-customer-ui-v2',location.href);
+const src=new URL('customer-ui-v3.html?v=20260904-final-cart-ui-1',location.href);
 if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
