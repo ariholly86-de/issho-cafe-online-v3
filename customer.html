@@ -11,15 +11,14 @@
 <script>
 const f=document.getElementById('app');
 const qs=new URLSearchParams(location.search);
-const src=new URL('customer-ui-v6.html?v=20260904-no-flicker-final',location.href);
+const src=new URL('customer-ui-v6.html?v=20260904-no-flicker-final2',location.href);
 if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
 
-/* CUSTOMER ONLY: the catalog is rendered completely off-screen first.
-   The customer iframe stays hidden until the menu and its images are ready,
-   so opening the page never exposes loading/reflow/flicker. */
-function stopChildIntervals(win){
+/* CUSTOMER ONLY: prepare the catalog while the iframe is hidden. Once the
+   first complete catalog is ready, reveal it once. No visible loading/reflow. */
+function stopCatalogIntervals(win){
   if(!win||win.__isshoCatalogIntervalsStopped)return;
   try{
     win.__isshoCatalogIntervalsStopped=true;
@@ -112,7 +111,9 @@ function install(doc,win){
   scan();
   const menu=doc.getElementById('menu');
   if(menu){
-    stopChildIntervals(win);
+    /* Only the deepest catalog document is allowed to have its intervals
+       cleared. Parent wrappers have timers used by the payment popup. */
+    stopCatalogIntervals(win);
     if(!doc.documentElement.dataset.isshoMenuLayoutFinal){
       doc.documentElement.dataset.isshoMenuLayoutFinal='1';
       new MutationObserver(scan).observe(menu,{childList:true,subtree:true});
@@ -133,15 +134,12 @@ function walk(doc,win,depth=0){
   if(!doc||depth>8)return false;
   let ready=false;
   try{
-    /* Freeze every nested frame, not only the deepest menu frame. */
-    stopChildIntervals(win);
     if(doc.getElementById('menu')){
       install(doc,win);
       ready=imagesReady(doc);
     }
     doc.querySelectorAll('iframe').forEach(fr=>{
       try{
-        if(fr.contentWindow)stopChildIntervals(fr.contentWindow);
         if(fr.contentDocument)ready=walk(fr.contentDocument,fr.contentWindow,depth+1)||ready;
         fr.addEventListener('load',()=>walk(fr.contentDocument,fr.contentWindow,depth+1),{once:true});
       }catch(e){}
@@ -164,7 +162,6 @@ f.addEventListener('load',()=>{
   const t=setInterval(()=>{if(revealIfReady())clearInterval(t)},200);
   setTimeout(()=>{
     clearInterval(t);
-    /* Never leave a customer page permanently blank if an image server is slow. */
     if(f.style.visibility!=='visible')f.style.visibility='visible';
   },15000);
 });
