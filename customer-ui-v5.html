@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>ISSHO CAFE — Menu Pelanggan</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080909}iframe{width:100%;height:100%;border:0;display:block}</style>
+</head>
+<body>
+<iframe id="app" title="ISSHO CAFE Menu Pelanggan"></iframe>
+<script>
+const f=document.getElementById('app');
+const qs=new URLSearchParams(location.search);
+const src=new URL('customer-ui-v3.html?v=20260904-ui-preserved',location.href);
+if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
+if(location.hash)src.hash=location.hash.slice(1);
+f.src=src.toString();
+
+f.addEventListener('load',()=>{
+  try{
+    const doc=f.contentDocument;
+    if(!doc)return;
+    function getCustomer(){
+      const inner=doc.querySelector('iframe#app');
+      if(!inner)return null;
+      return {win:inner.contentWindow,doc:inner.contentDocument};
+    }
+    function install(){
+      const c=getCustomer();
+      if(!c||!c.doc||!c.doc.body)return false;
+      const d=c.doc,w=c.win;
+      if(d.documentElement.dataset.cashPopupV5==='1')return true;
+      const cash=d.getElementById('cashBtn');
+      if(!cash)return false;
+      d.documentElement.dataset.cashPopupV5='1';
+      const style=d.createElement('style');
+      style.textContent=`
+        .cash-reminder-v5-overlay{position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto}
+        .cash-reminder-v5{width:min(560px,94vw);max-height:calc(100vh - 28px);overflow:auto;background:#fff;color:#111;border-radius:20px;padding:18px;box-shadow:0 20px 70px #000;text-align:center;font-family:Arial,sans-serif}
+        .cash-reminder-v5 .icon{width:74px;height:74px;border-radius:50%;background:#dff6e6;color:#14823b;margin:0 auto 8px;display:grid;place-items:center;font-size:37px}
+        .cash-reminder-v5 h2{font-size:25px;line-height:1.2;margin:0 0 5px;color:#111}.cash-reminder-v5 .method{font-size:16px;color:#444;margin-bottom:14px}
+        .cash-reminder-v5 .box{border-radius:13px;padding:14px;margin-top:10px}.cash-reminder-v5 .order{background:#f2f4f7}.cash-reminder-v5 .label{font-size:15px;color:#555;margin-bottom:5px}.cash-reminder-v5 .order-no{font-size:22px;font-weight:900;word-break:break-word}.cash-reminder-v5 .time{font-size:14px;color:#555;margin-top:6px}
+        .cash-reminder-v5 .warning{background:#ffe9e7;color:#d71920}.cash-reminder-v5 .warning .big{font-size:22px;font-weight:900;line-height:1.18}.cash-reminder-v5 .warning p{color:#222;font-size:15px;line-height:1.45;margin:10px 0 0}
+        .cash-reminder-v5 .instruction{background:#fff2cf;text-align:left;font-size:15px;line-height:1.4}.cash-reminder-v5 .instruction strong{display:block;font-size:16px;margin-bottom:4px}
+        .cash-reminder-v5 .total{background:#f2f4f7;text-align:left}.cash-reminder-v5 .total small{display:block;color:#555;font-size:14px}.cash-reminder-v5 .total b{display:block;font-size:31px;line-height:1.1;margin-top:2px}
+        .cash-reminder-v5 button{width:100%;margin-top:12px;background:#8a4f13;color:#fff;border:0;border-radius:13px;padding:16px 14px;font-size:17px;font-weight:900;cursor:pointer}.cash-reminder-v5 .thanks{font-size:14px;color:#666;margin-top:12px}
+        @media(max-width:600px){.cash-reminder-v5{padding:14px}.cash-reminder-v5 h2{font-size:21px}.cash-reminder-v5 .icon{width:64px;height:64px;font-size:31px}.cash-reminder-v5 .order-no{font-size:18px}.cash-reminder-v5 .warning .big{font-size:19px}.cash-reminder-v5 .warning p{font-size:14px}.cash-reminder-v5 .total b{font-size:27px}}
+      `;
+      d.head.appendChild(style);
+      function showPopup(){
+        const result=d.getElementById('result');
+        if(!result||result.querySelector('.err'))return;
+        const text=result.textContent||'';
+        const order=(text.match(/Pesanan\s+([^\s]+)\s+berhasil/i)||[])[1]||'Pesanan Anda';
+        const total=(text.match(/Total\s+(Rp\s*[\d.]+)/i)||[])[1]||(d.getElementById('tot')?.textContent||'Rp0');
+        const now=new Date();
+        const date=new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'long',year:'numeric',timeZone:'Asia/Jakarta'}).format(now);
+        const time=new Intl.DateTimeFormat('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'Asia/Jakarta'}).format(now)+' WIB';
+        d.querySelectorAll('.cash-reminder-overlay,.cash-reminder-v5-overlay').forEach(x=>x.remove());
+        const o=d.createElement('div');o.className='cash-reminder-v5-overlay';
+        const safe=w.esc||((s)=>String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m])));
+        o.innerHTML=`<div class="cash-reminder-v5" role="dialog" aria-modal="true"><div class="icon">💵</div><h2>Pesanan Anda Berhasil Dibuat</h2><div class="method">Metode Pembayaran: <b>Tunai</b></div><div class="box order"><div class="label">Nomor Order</div><div class="order-no">${safe(order)}</div><div class="time">${safe(date)} • ${safe(time)}</div></div><div class="box warning"><div class="big">Silakan lakukan pembayaran di meja kasir</div><p>Untuk pembayaran TUNAI, pesanan Anda <b>belum dapat diproses oleh dapur</b> sebelum pembayaran diterima oleh kasir.</p></div><div class="box instruction"><strong>👤 Silakan datang ke meja kasir</strong>Sebutkan <b>nomor order</b> Anda kepada kasir agar pembayaran dapat segera diproses.</div><div class="box total"><small>Total yang harus dibayar</small><b>${safe(total)}</b></div><button type="button" class="cash-v5-ok">✓ &nbsp; SAYA MENGERTI</button><div class="thanks">Terima kasih telah memesan di Issho Cafe ❤️</div></div>`;
+        d.body.appendChild(o);
+        o.querySelector('.cash-v5-ok').onclick=()=>o.remove();
+        o.onclick=e=>{if(e.target===o)o.remove()};
+      }
+      cash.addEventListener('click',async(ev)=>{
+        ev.preventDefault();ev.stopImmediatePropagation();
+        const place=w.place;
+        if(typeof place!=='function')return;
+        const before=(d.getElementById('result')?.textContent||'');
+        await place.call(w,'CASH');
+        const after=(d.getElementById('result')?.textContent||'');
+        if(after!==before)showPopup();
+      },true);
+      return true;
+    }
+    if(!install()){
+      const timer=setInterval(()=>{if(install())clearInterval(timer)},200);
+      setTimeout(()=>clearInterval(timer),15000);
+    }
+  }catch(e){console.warn('cash popup v5 installer failed',e)}
+});
+</script>
+</body>
+</html>
