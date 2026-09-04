@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>ISSHO CAFE — Menu Pelanggan</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b0b0b}iframe{width:100%;height:100%;border:0;display:block}</style>
+</head>
+<body>
+<iframe id="app" title="ISSHO CAFE Menu Pelanggan"></iframe>
+<script>
+const f=document.getElementById('app');
+const qs=new URLSearchParams(location.search);
+const src=new URL('customer-live-fixed.html?v=20260904-customer-ui-v2',location.href);
+if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
+if(location.hash)src.hash=location.hash.slice(1);
+f.src=src.toString();
+
+f.addEventListener('load',()=>{
+  try{
+    const d=f.contentDocument||f.contentWindow.document;
+    if(!d||!d.head)return;
+    const s=d.createElement('style');
+    s.id='customer-ui-v2-style';
+    s.textContent=`
+      /* ===== ISSHO CUSTOMER UI V2: TABLE + CART AT TOP ===== */
+      .customer-topbar{display:grid!important;grid-template-columns:minmax(180px,1fr) minmax(260px,1.4fr);gap:10px;margin:12px 0;align-items:stretch}
+      .customer-topbar .top-table,.customer-topbar .top-cart{background:#171717;border:1px solid #3b3b3b;border-radius:16px;padding:13px;min-width:0}
+      .customer-topbar .top-table{background:linear-gradient(135deg,#3b2a18,#171717)}
+      .customer-topbar .top-label{font-size:12px;color:#aaa;margin-bottom:4px}
+      .customer-topbar .top-table-name{font-size:22px;font-weight:900;line-height:1.1}
+      .customer-topbar .top-table select{margin-top:8px;padding:9px;font-size:14px}
+      .customer-topbar .top-cart{display:flex;align-items:center;gap:12px;cursor:pointer}
+      .customer-topbar .cart-icon{width:52px;height:52px;border-radius:13px;background:#242424;display:grid;place-items:center;font-size:29px;flex:0 0 auto;position:relative}
+      .customer-topbar .cart-badge{position:absolute;right:-5px;top:-6px;background:#c62828;color:#fff;border-radius:99px;min-width:25px;height:25px;padding:0 6px;display:grid;place-items:center;font-size:13px;font-weight:900}
+      .customer-topbar .cart-main{min-width:0;flex:1}
+      .customer-topbar .cart-title{font-size:18px;font-weight:900}
+      .customer-topbar .cart-summary{color:#aaa;margin-top:3px;font-size:14px}
+      .customer-topbar .cart-arrow{font-size:30px;color:#ddd}
+      .customer-topbar .top-cart.has-items{border-color:#b68142;box-shadow:0 0 0 1px #b68142 inset}
+      #customer-cart-detail{margin-top:10px}
+      #customer-cart-detail h3{margin-top:0}
+      @media(max-width:600px){
+        .customer-topbar{grid-template-columns:1fr 1.25fr;gap:7px;margin:8px 0}
+        .customer-topbar .top-table,.customer-topbar .top-cart{padding:10px;border-radius:13px}
+        .customer-topbar .top-table-name{font-size:18px}
+        .customer-topbar .cart-icon{width:43px;height:43px;font-size:24px}
+        .customer-topbar .cart-title{font-size:15px}
+        .customer-topbar .cart-summary{font-size:12px}
+        .customer-topbar .cart-arrow{font-size:24px}
+      }
+      /* ===== CASH PAYMENT REMINDER ===== */
+      .cash-reminder-overlay{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.84);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+      .cash-reminder{width:min(520px,94vw);background:#fff;color:#111;border-radius:20px;padding:18px;box-shadow:0 20px 70px rgba(0,0,0,.55)}
+      .cash-reminder .cash-icon{width:66px;height:66px;border-radius:50%;background:#e3f6e9;color:#238443;display:grid;place-items:center;font-size:35px;margin:2px auto 10px}
+      .cash-reminder h2{text-align:center;margin:0 0 5px;font-size:23px}
+      .cash-reminder .method{text-align:center;color:#555;margin-bottom:14px}
+      .cash-reminder .order-box{background:#f2f4f7;border-radius:12px;padding:12px;text-align:center;margin-bottom:12px}
+      .cash-reminder .order-label{font-size:13px;color:#666}.cash-reminder .order-no{font-size:18px;font-weight:900;word-break:break-word;margin-top:3px}
+      .cash-reminder .warning{background:#fde9e7;color:#b3261e;border-radius:12px;padding:14px;text-align:center;margin-bottom:12px}
+      .cash-reminder .warning .big{font-size:20px;font-weight:900;line-height:1.2;margin-bottom:7px}
+      .cash-reminder .warning p{margin:0;color:#333;line-height:1.45;font-size:14px}
+      .cash-reminder .cash-instruction{background:#fff4d8;border-radius:12px;padding:13px;margin-bottom:12px;line-height:1.45}
+      .cash-reminder .cash-instruction strong{display:block;font-size:14px;margin-bottom:5px}
+      .cash-reminder .pay-total{background:#f2f4f7;border-radius:12px;padding:12px;text-align:center;margin-bottom:14px}
+      .cash-reminder .pay-total small{display:block;color:#666}.cash-reminder .pay-total b{font-size:26px}
+      .cash-reminder button{width:100%;border:0;border-radius:11px;padding:13px;background:#8a4f13;color:#fff;font-size:17px;font-weight:900;cursor:pointer}
+      .cash-reminder .thanks{text-align:center;color:#666;font-size:12px;margin-top:9px}
+    `;
+    d.head.appendChild(s);
+
+    const w=f.contentWindow;
+    const originalRenderCart=w.renderCart;
+    const updateTopCart=()=>{
+      const bar=d.getElementById('customer-topbar');
+      if(!bar)return;
+      const count=(Array.isArray(w.cart)?w.cart:[]).reduce((n,x)=>n+(Number(x.qty)||0),0);
+      let total=0;
+      (Array.isArray(w.cart)?w.cart:[]).forEach(x=>{const p=(w.products||[]).find(a=>a.id===x.id);if(p)total+=Number(p.price||0)*(Number(x.qty)||0)});
+      const badge=bar.querySelector('.cart-badge'),sum=bar.querySelector('.cart-summary'),box=bar.querySelector('.top-cart');
+      if(badge)badge.textContent=count;
+      if(sum)sum.textContent=count?`${count} item • ${w.money(total)}`:'Keranjang masih kosong';
+      if(box)box.classList.toggle('has-items',count>0);
+    };
+    w.renderCart=function(){originalRenderCart();updateTopCart()};
+
+    const hero=d.querySelector('.hero');
+    const tools=d.querySelector('.tools');
+    const cartCard=[...d.querySelectorAll('.card')].find(el=>el.querySelector('#cart')&&el.querySelector('#qrisBtn')&&el.querySelector('#cashBtn'));
+    if(hero&&tools&&cartCard){
+      const top=d.createElement('div');
+      top.id='customer-topbar';
+      top.className='customer-topbar';
+      top.innerHTML=`<div class="top-table"><div class="top-label">🪑 MEJA ANDA</div><div class="top-table-name" id="top-table-name">Meja 01</div><div id="top-table-select"></div></div><div class="top-cart" id="top-cart"><div class="cart-icon">🛒<span class="cart-badge">0</span></div><div class="cart-main"><div class="cart-title">Keranjang Pesanan</div><div class="cart-summary">Keranjang masih kosong</div></div><div class="cart-arrow">›</div></div>`;
+      hero.parentNode.insertBefore(top,hero);
+      const topSelect=d.getElementById('top-table-select');
+      const originalSelect=d.getElementById('ts');
+      if(originalSelect&&topSelect){
+        topSelect.appendChild(originalSelect);
+        originalSelect.style.marginTop='7px';
+      }
+      const tn=d.getElementById('tn');
+      if(tn)tn.style.display='none';
+      hero.style.display='none';
+      cartCard.id='customer-cart-detail';
+      const heading=cartCard.querySelector('h3');if(heading)heading.textContent='Detail Keranjang & Pembayaran';
+      d.getElementById('top-cart').addEventListener('click',()=>cartCard.scrollIntoView({behavior:'smooth',block:'start'}));
+      const syncTable=()=>{const src=d.getElementById('tn'),dst=d.getElementById('top-table-name');if(src&&dst)dst.textContent=src.textContent||'Meja 01'};
+      new MutationObserver(syncTable).observe(d.getElementById('tn')||d.body,{childList:true,subtree:true,characterData:true});
+      syncTable();
+      updateTopCart();
+    }
+
+    /* Cash flow: keep original order creation, only replace the success message with a clear reminder. */
+    const originalPlace=w.place;
+    w.place=async function(method){
+      await originalPlace(method);
+      if(method!=='CASH')return;
+      const result=d.getElementById('result');
+      if(!result||result.querySelector('.err'))return;
+      const text=result.textContent||'';
+      const match=text.match(/Pesanan\s+([^\s]+)\s+berhasil/i);
+      const orderNo=match?match[1]:'Pesanan Anda';
+      const total=typeof w.totalFromOrder==='number'?w.money(w.totalFromOrder):((text.match(/Rp[\s\d.]+/)||[])[0]||'Rp0');
+      const overlay=d.createElement('div');
+      overlay.className='cash-reminder-overlay';
+      overlay.innerHTML=`<div class="cash-reminder" role="dialog" aria-modal="true"><div class="cash-icon">💵</div><h2>Pesanan Anda Berhasil Dibuat</h2><div class="method">Metode Pembayaran: <b>Tunai</b></div><div class="order-box"><div class="order-label">Nomor Order</div><div class="order-no">${w.esc(orderNo)}</div></div><div class="warning"><div class="big">Silakan lakukan pembayaran di meja kasir</div><p>Untuk pembayaran TUNAI, pesanan Anda <b>belum dapat diproses oleh dapur</b> sebelum pembayaran diterima oleh kasir.</p></div><div class="cash-instruction"><strong>👤 Silakan datang ke meja kasir</strong>Sebutkan <b>nomor order</b> Anda kepada kasir agar pembayaran dapat segera diproses.</div><div class="pay-total"><small>Total yang harus dibayar</small><b>${w.esc(total)}</b></div><button type="button" id="cash-reminder-ok">✓ SAYA MENGERTI</button><div class="thanks">Terima kasih telah memesan di Issho Cafe ❤️</div></div>`;
+      d.body.appendChild(overlay);
+      const close=()=>overlay.remove();
+      d.getElementById('cash-reminder-ok').addEventListener('click',close);
+    };
+  }catch(e){console.warn('customer ui v2 patch failed',e)}
+});
+</script>
+</body>
+</html>
