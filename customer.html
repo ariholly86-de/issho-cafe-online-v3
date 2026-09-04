@@ -11,7 +11,7 @@
 <script>
 const f=document.getElementById('app');
 const qs=new URLSearchParams(location.search);
-const src=new URL('customer-ui-v6.html?v=20260904-menu-layout-final',location.href);
+const src=new URL('customer-ui-v6.html?v=20260904-menu-layout-font14',location.href);
 if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
@@ -34,7 +34,7 @@ function install(doc,win){
     doc.querySelectorAll('#menu .menu').forEach(menu=>{
       menu.style.setProperty('min-height','0','important');menu.style.setProperty('height','auto','important');menu.style.setProperty('padding','10px','important');menu.style.setProperty('display','flex','important');menu.style.setProperty('flex-direction','column','important');
       const photo=menu.querySelector(':scope > .photo');if(photo){const mobile=win&&win.innerWidth<=600;photo.style.setProperty('height',mobile?'100px':'130px','important');photo.style.setProperty('min-height',mobile?'100px':'130px','important');photo.style.setProperty('max-height',mobile?'100px':'130px','important');photo.style.setProperty('width','100%','important');photo.style.setProperty('margin-bottom','5px','important');photo.style.setProperty('overflow','hidden','important');photo.style.setProperty('padding','0','important');photo.style.setProperty('display','grid','important');photo.style.setProperty('place-items','center','important')}
-      const title=menu.querySelector(':scope > h3');if(title){title.style.setProperty('margin','2px 0 2px','important');title.style.setProperty('padding','0','important');title.style.setProperty('line-height','1.15','important');title.style.setProperty('min-height','0','important')}
+      const title=menu.querySelector(':scope > h3');if(title){title.style.setProperty('margin','2px 0 2px','important');title.style.setProperty('padding','0','important');title.style.setProperty('line-height','1.15','important');title.style.setProperty('font-size','14px','important');title.style.setProperty('font-weight','700','important');title.style.setProperty('min-height','0','important')}
       const desc=menu.querySelector(':scope > .muted');if(desc){desc.style.setProperty('margin','0','important');desc.style.setProperty('padding','0','important');desc.style.setProperty('line-height','1.1','important');desc.style.setProperty('min-height','0','important')}
       const row=menu.querySelector(':scope > .row');if(row){row.style.setProperty('margin-top','5px','important');row.style.setProperty('margin-bottom','0','important');row.style.setProperty('padding-top','0','important');row.style.setProperty('flex','0 0 auto','important');row.style.setProperty('align-items','center','important')}
     });
