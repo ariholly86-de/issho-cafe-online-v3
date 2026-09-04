@@ -11,39 +11,110 @@
 <script>
 const f=document.getElementById('app');
 const qs=new URLSearchParams(location.search);
-const src=new URL('customer-ui-v6.html?v=20260904-menu-layout-font14',location.href);
+const src=new URL('customer-ui-v6.html?v=20260904-static-stable-images',location.href);
 if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
 
-function normalizeImage(img){
-  try{
-    if(!img||!img.src||img.dataset.imageFixed==='1')return;
-    const src=img.currentSrc||img.src;if(!src)return;
-    img.dataset.imageFixed='1';
-    img.style.setProperty('width','100%','important');img.style.setProperty('height','100%','important');
-    img.style.setProperty('max-width','100%','important');img.style.setProperty('max-height','100%','important');
-    img.style.setProperty('object-fit','contain','important');img.style.setProperty('display','block','important');
-    const run=async()=>{try{const res=await fetch(src,{mode:'cors',cache:'no-store'});if(!res.ok)throw Error();const blob=await res.blob();const bmp=await createImageBitmap(blob);const c=document.createElement('canvas');c.width=500;c.height=500;const x=c.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,500,500);const s=Math.min(500/bmp.width,500/bmp.height),w=Math.max(1,Math.round(bmp.width*s)),h=Math.max(1,Math.round(bmp.height*s));x.drawImage(bmp,Math.round((500-w)/2),Math.round((500-h)/2),w,h);bmp.close();const out=await new Promise((r,j)=>c.toBlob(b=>b?r(b):j(Error()),'image/jpeg',.85));img.src=URL.createObjectURL(out)}catch(e){}}
-    if(img.complete&&img.naturalWidth)run();else img.addEventListener('load',run,{once:true});
-  }catch(e){}
-}
+/* CUSTOMER ONLY: keep image elements static. Never replace/re-fetch image
+   sources in the browser. This prevents visible image jumping/flicker. */
 function install(doc,win){
   if(!doc||!doc.body)return false;
   const scan=()=>{
     doc.querySelectorAll('#menu .menu').forEach(menu=>{
-      menu.style.setProperty('min-height','0','important');menu.style.setProperty('height','auto','important');menu.style.setProperty('padding','10px','important');menu.style.setProperty('display','flex','important');menu.style.setProperty('flex-direction','column','important');
-      const photo=menu.querySelector(':scope > .photo');if(photo){const mobile=win&&win.innerWidth<=600;photo.style.setProperty('height',mobile?'100px':'130px','important');photo.style.setProperty('min-height',mobile?'100px':'130px','important');photo.style.setProperty('max-height',mobile?'100px':'130px','important');photo.style.setProperty('width','100%','important');photo.style.setProperty('margin-bottom','5px','important');photo.style.setProperty('overflow','hidden','important');photo.style.setProperty('padding','0','important');photo.style.setProperty('display','grid','important');photo.style.setProperty('place-items','center','important')}
-      const title=menu.querySelector(':scope > h3');if(title){title.style.setProperty('margin','2px 0 2px','important');title.style.setProperty('padding','0','important');title.style.setProperty('line-height','1.15','important');title.style.setProperty('font-size','14px','important');title.style.setProperty('font-weight','700','important');title.style.setProperty('min-height','0','important')}
-      const desc=menu.querySelector(':scope > .muted');if(desc){desc.style.setProperty('margin','0','important');desc.style.setProperty('padding','0','important');desc.style.setProperty('line-height','1.1','important');desc.style.setProperty('min-height','0','important')}
-      const row=menu.querySelector(':scope > .row');if(row){row.style.setProperty('margin-top','5px','important');row.style.setProperty('margin-bottom','0','important');row.style.setProperty('padding-top','0','important');row.style.setProperty('flex','0 0 auto','important');row.style.setProperty('align-items','center','important')}
+      menu.style.setProperty('min-height','0','important');
+      menu.style.setProperty('height','auto','important');
+      menu.style.setProperty('padding','10px','important');
+      menu.style.setProperty('display','flex','important');
+      menu.style.setProperty('flex-direction','column','important');
+      menu.style.setProperty('transition','none','important');
+      menu.style.setProperty('animation','none','important');
+      menu.style.setProperty('transform','none','important');
+      const photo=menu.querySelector(':scope > .photo');
+      if(photo){
+        const mobile=win&&win.innerWidth<=600;
+        const h=mobile?'105px':'140px';
+        photo.style.setProperty('height',h,'important');
+        photo.style.setProperty('min-height',h,'important');
+        photo.style.setProperty('max-height',h,'important');
+        photo.style.setProperty('width','100%','important');
+        photo.style.setProperty('margin-bottom',mobile?'4px':'5px','important');
+        photo.style.setProperty('overflow','hidden','important');
+        photo.style.setProperty('padding','0','important');
+        photo.style.setProperty('display','grid','important');
+        photo.style.setProperty('place-items','center','important');
+        photo.style.setProperty('transition','none','important');
+        photo.style.setProperty('animation','none','important');
+      }
+      const title=menu.querySelector(':scope > h3');
+      if(title){
+        title.style.setProperty('margin','2px 0 2px','important');
+        title.style.setProperty('padding','0','important');
+        title.style.setProperty('line-height','1.15','important');
+        title.style.setProperty('font-size','14px','important');
+        title.style.setProperty('font-weight','700','important');
+        title.style.setProperty('min-height','0','important');
+      }
+      const desc=menu.querySelector(':scope > .muted');
+      if(desc){
+        desc.style.setProperty('display','none','important');
+        desc.style.setProperty('height','0','important');
+        desc.style.setProperty('min-height','0','important');
+        desc.style.setProperty('margin','0','important');
+        desc.style.setProperty('padding','0','important');
+      }
+      const row=menu.querySelector(':scope > .row');
+      if(row){
+        row.style.setProperty('margin-top','1px','important');
+        row.style.setProperty('margin-bottom','0','important');
+        row.style.setProperty('padding-top','0','important');
+        row.style.setProperty('flex','0 0 auto','important');
+        row.style.setProperty('align-items','center','important');
+      }
     });
-    doc.querySelectorAll('#menu .photo img').forEach(normalizeImage);
+    doc.querySelectorAll('#menu .photo img').forEach(img=>{
+      img.style.setProperty('width','100%','important');
+      img.style.setProperty('height','100%','important');
+      img.style.setProperty('max-width','100%','important');
+      img.style.setProperty('max-height','100%','important');
+      img.style.setProperty('object-fit','contain','important');
+      img.style.setProperty('display','block','important');
+      img.style.setProperty('transition','none','important');
+      img.style.setProperty('animation','none','important');
+      img.style.setProperty('transform','none','important');
+      img.setAttribute('width','500');
+      img.setAttribute('height','500');
+      img.setAttribute('decoding','sync');
+      img.setAttribute('loading','eager');
+    });
   };
-  scan();const menu=doc.getElementById('menu');if(menu&&!doc.documentElement.dataset.isshoMenuLayoutFinal){doc.documentElement.dataset.isshoMenuLayoutFinal='1';new MutationObserver(scan).observe(menu,{childList:true,subtree:true})}return !!menu;
+  scan();
+  const menu=doc.getElementById('menu');
+  if(menu&&!doc.documentElement.dataset.isshoMenuLayoutFinal){
+    doc.documentElement.dataset.isshoMenuLayoutFinal='1';
+    new MutationObserver(scan).observe(menu,{childList:true,subtree:true});
+  }
+  return !!menu;
 }
-function walk(doc,win,depth=0){if(!doc||depth>8)return false;let found=false;try{if(doc.getElementById('menu'))found=install(doc,win)||found;doc.querySelectorAll('iframe').forEach(fr=>{try{if(fr.contentDocument)walk(fr.contentDocument,fr.contentWindow,depth+1);fr.addEventListener('load',()=>walk(fr.contentDocument,fr.contentWindow,depth+1),{once:true})}catch(e){}})}catch(e){}return found}
-f.addEventListener('load',()=>{walk(f.contentDocument,f.contentWindow);const t=setInterval(()=>walk(f.contentDocument,f.contentWindow),500);setTimeout(()=>clearInterval(t),30000)});
+function walk(doc,win,depth=0){
+  if(!doc||depth>8)return false;
+  let found=false;
+  try{
+    if(doc.getElementById('menu'))found=install(doc,win)||found;
+    doc.querySelectorAll('iframe').forEach(fr=>{
+      try{
+        if(fr.contentDocument)walk(fr.contentDocument,fr.contentWindow,depth+1);
+        fr.addEventListener('load',()=>walk(fr.contentDocument,fr.contentWindow,depth+1),{once:true});
+      }catch(e){}
+    });
+  }catch(e){}
+  return found;
+}
+f.addEventListener('load',()=>{
+  walk(f.contentDocument,f.contentWindow);
+  const t=setInterval(()=>walk(f.contentDocument,f.contentWindow),500);
+  setTimeout(()=>clearInterval(t),30000);
+});
 </script>
 </body>
 </html>
