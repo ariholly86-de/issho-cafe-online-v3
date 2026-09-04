@@ -6,17 +6,35 @@
   <meta name="robots" content="noindex,nofollow">
   <meta http-equiv="Cache-Control" content="no-store">
   <title>ISSHO CAFE — DAPUR + PRINTER + ALARM</title>
-  <style>html,body{margin:0;height:100%;background:#0b0b0b;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center}.box{text-align:center;padding:24px;max-width:520px}.spin{font-size:40px;margin-bottom:12px}.muted{color:#aaa;font-size:14px;line-height:1.5}.open{display:inline-block;margin-top:20px;padding:15px 24px;border-radius:12px;background:#2f8b59;color:#fff;text-decoration:none;font-weight:900;font-size:17px}.web{display:inline-block;margin-top:12px;color:#d5a15d;text-decoration:none;font-size:14px}</style>
+  <style>html,body{margin:0;height:100%;background:#0b0b0b;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center}.box{text-align:center;padding:24px;max-width:620px}.spin{font-size:40px;margin-bottom:12px}.muted{color:#aaa;font-size:14px;line-height:1.5}.open{display:inline-block;margin-top:20px;padding:17px 28px;border-radius:12px;background:#2f8b59;color:#fff;text-decoration:none;font-weight:900;font-size:18px;cursor:pointer;border:2px solid #fff}.web{display:inline-block;margin-top:12px;color:#d5a15d;text-decoration:none;font-size:14px}</style>
 </head>
 <body>
   <div class="box">
     <div class="spin">🍳🖨️🔔</div>
     <h2>ISSHO CAFE — DAPUR</h2>
     <div class="muted">Dapur + Auto Print + Alarm</div>
-    <div class="muted" style="margin-top:10px">Tekan tombol di bawah untuk membuka aplikasi Dapur & Printer. Jangan gunakan tombol Hubungkan Printer dari Chrome Android.</div>
-    <a class="open" id="openApp" href="intent://dapur/#Intent;scheme=isshocafe;package=com.isshocafe.printerbridge;S.browser_fallback_url=https%3A%2F%2Fissho-cafe-online-v3.vercel.app%2Fdapur-v8.html%3Fv%3D20260904-gabungan;end">🚀 BUKA DAPUR + PRINTER</a>
+    <div class="muted" style="margin-top:10px">Gunakan tombol hijau di bawah pada tablet Android. Aplikasi ISSHO CAFE Printer Bridge harus sudah terpasang dan printer RPP02N/WP58D sudah di-pair.</div>
+    <a class="open" id="openApp" href="isshocafe://dapur">🚀 BUKA DAPUR + PRINTER</a>
     <br>
     <a class="web" href="/dapur-v8.html?v=20260904-gabungan">Buka Dapur versi web</a>
   </div>
+<script>
+(function(){
+  var btn=document.getElementById('openApp');
+  btn.addEventListener('click',function(e){
+    e.preventDefault();
+    var opened=false;
+    var onHide=function(){opened=true};
+    document.addEventListener('visibilitychange',onHide,{once:true});
+    window.location.href='isshocafe://dapur';
+    setTimeout(function(){
+      document.removeEventListener('visibilitychange',onHide);
+      if(!opened){
+        window.location.href='https://issho-cafe-online-v3.vercel.app/dapur-v8.html?v=20260904-gabungan';
+      }
+    },1200);
+  });
+})();
+</script>
 </body>
 </html>
