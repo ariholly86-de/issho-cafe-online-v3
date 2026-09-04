@@ -33,6 +33,18 @@ f.addEventListener('load',()=>{
       d.documentElement.dataset.isshoTablePopupFix='2';
       const css=d.createElement('style');
       css.textContent=`
+        /* RAPATKAN NAMA MENU DAN HARGA - berlaku untuk semua kartu menu */
+        #menu .menu{min-height:0!important;height:auto!important}
+        #menu .menu h3{margin:4px 0 3px!important;line-height:1.2!important}
+        #menu .menu>.muted{min-height:0!important;margin:0!important;line-height:1.25!important}
+        #menu .menu>.row{margin-top:6px!important;flex:0 0 auto!important}
+        #menu .menu .price{line-height:1.15!important}
+        @media(max-width:600px){
+          #menu .menu{min-height:0!important;height:auto!important}
+          #menu .menu h3{margin:3px 0 2px!important}
+          #menu .menu>.row{margin-top:5px!important}
+        }
+
         .cash-reminder-v6 .table-inline{margin-top:12px;padding-top:10px;border-top:1px solid #d9dde2}
         .cash-reminder-v6 .table-inline .table-label{font-size:14px;color:#555;margin-bottom:3px}
         .cash-reminder-v6 .table-inline .table-no{font-size:25px;font-weight:900;line-height:1.15;color:#111}
