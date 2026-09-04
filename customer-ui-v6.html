@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>ISSHO CAFE — Menu Pelanggan</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080909}iframe{width:100%;height:100%;border:0;display:block}</style>
+</head>
+<body>
+<iframe id="app" title="ISSHO CAFE Menu Pelanggan"></iframe>
+<script>
+const f=document.getElementById('app');
+const qs=new URLSearchParams(location.search);
+const src=new URL('customer-ui-v5.html?v=20260904-cash-popup-v6',location.href);
+if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
+if(location.hash)src.hash=location.hash.slice(1);
+f.src=src.toString();
+
+f.addEventListener('load',()=>{
+  try{
+    const outer=f.contentDocument;
+    if(!outer)return;
+    const getCustomer=()=>{
+      const inner=outer.querySelector('iframe#app');
+      if(!inner||!inner.contentDocument)return null;
+      return {doc:inner.contentDocument,win:inner.contentWindow};
+    };
+    const install=()=>{
+      const c=getCustomer();
+      if(!c||!c.doc.body)return false;
+      const d=c.doc;
+      if(d.documentElement.dataset.isshoTablePopupFix==='1')return true;
+      d.documentElement.dataset.isshoTablePopupFix='1';
+      const css=d.createElement('style');
+      css.textContent=`
+        .cash-reminder-v6 .table-box{background:#eee9df;color:#111;border-radius:13px;padding:12px 14px;margin-top:10px;text-align:center}
+        .cash-reminder-v6 .table-box .table-label{font-size:14px;color:#666;margin-bottom:3px}
+        .cash-reminder-v6 .table-box .table-no{font-size:24px;font-weight:900;line-height:1.15}
+        @media(max-width:600px){.cash-reminder-v6 .table-box .table-no{font-size:21px}}
+      `;
+      d.head.appendChild(css);
+      const addTable=()=>{
+        const popup=d.querySelector('.cash-reminder-v6');
+        if(!popup||popup.querySelector('.table-box'))return;
+        const order=popup.querySelector('.order');
+        const tn=d.getElementById('tn');
+        if(!order||!tn)return;
+        const tableText=(tn.textContent||'').trim();
+        if(!tableText)return;
+        const box=d.createElement('div');
+        box.className='table-box';
+        const label=d.createElement('div');label.className='table-label';label.textContent='Nomor Meja';
+        const no=d.createElement('div');no.className='table-no';no.textContent=tableText;
+        box.append(label,no);
+        order.insertAdjacentElement('afterend',box);
+      };
+      const observer=new MutationObserver(addTable);
+      observer.observe(d.body,{childList:true,subtree:true});
+      addTable();
+      return true;
+    };
+    if(!install()){
+      const timer=setInterval(()=>{if(install())clearInterval(timer)},200);
+      setTimeout(()=>clearInterval(timer),20000);
+    }
+  }catch(e){console.warn('ISSHO table popup fix failed',e)}
+});
+</script>
+</body>
+</html>
