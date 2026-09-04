@@ -24,10 +24,6 @@ function installSearch(doc,win){
   const count=doc.getElementById('count');
   if(!input||!menu||!count)return;
   doc.documentElement.dataset.isshoCrossCategorySearch='1';
-
-  /* Execute the search handler inside the deepest customer document. This is
-     required because products/categories are top-level lexical bindings and
-     are not guaranteed to exist as window.products/window.categories. */
   const script=doc.createElement('script');
   script.textContent="(function(){\n"+
     "const input=document.getElementById('search');\n"+
@@ -60,7 +56,7 @@ function installMenu(doc,win){
       css.textContent=`
         #menu .menu{display:flex!important;flex-direction:column!important;min-height:0!important;height:auto!important;overflow:hidden!important;transition:none!important;animation:none!important;transform:none!important}
         #menu .menu>.photo{order:1!important;flex:0 0 auto!important;margin-bottom:5px!important;transition:none!important;animation:none!important;transform:none!important}
-        #menu .menu>.photo img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;transition:none!important;animation:none!important;transform:none!important}
+        #menu .menu>.photo img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;transition:none!important;animation:none!important}
         #menu .menu>h3{order:2!important;display:block!important;font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:700!important;line-height:1.15!important;margin:0!important;padding:0!important;color:#fff!important;min-height:0!important;transition:none!important;animation:none!important;transform:none!important}
         #menu .menu>.muted{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important}
         #menu .menu>.row{order:3!important;display:flex!important;flex:0 0 auto!important;margin:1px 0 0!important;padding:0!important;align-items:center!important;transition:none!important;animation:none!important;transform:none!important}
@@ -107,7 +103,9 @@ function installMenu(doc,win){
           img.style.setProperty('display','block','important');
           img.style.setProperty('transition','none','important');
           img.style.setProperty('animation','none','important');
-          img.style.setProperty('transform','none','important');
+          const imageName=(img.getAttribute('alt')||'').toLowerCase();
+          img.style.setProperty('transform',imageName.includes('steak')?'scale(1.45)':'none','important');
+          img.style.setProperty('transform-origin','center center','important');
         }
       }
       const title=menu.querySelector(':scope > h3');
