@@ -11,7 +11,7 @@
 <script>
 const f=document.getElementById('app');
 const qs=new URLSearchParams(location.search);
-const src=new URL('customer-ui-v5.html?v=20260904-cash-popup-v6',location.href);
+const src=new URL('customer-ui-v5.html?v=20260904-cash-popup-v7',location.href);
 if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
@@ -29,30 +29,34 @@ f.addEventListener('load',()=>{
       const c=getCustomer();
       if(!c||!c.doc.body)return false;
       const d=c.doc;
-      if(d.documentElement.dataset.isshoTablePopupFix==='1')return true;
-      d.documentElement.dataset.isshoTablePopupFix='1';
+      if(d.documentElement.dataset.isshoTablePopupFix==='2')return true;
+      d.documentElement.dataset.isshoTablePopupFix='2';
       const css=d.createElement('style');
       css.textContent=`
-        .cash-reminder-v6 .table-box{background:#eee9df;color:#111;border-radius:13px;padding:12px 14px;margin-top:10px;text-align:center}
-        .cash-reminder-v6 .table-box .table-label{font-size:14px;color:#666;margin-bottom:3px}
-        .cash-reminder-v6 .table-box .table-no{font-size:24px;font-weight:900;line-height:1.15}
-        @media(max-width:600px){.cash-reminder-v6 .table-box .table-no{font-size:21px}}
+        .cash-reminder-v6 .table-inline{margin-top:12px;padding-top:10px;border-top:1px solid #d9dde2}
+        .cash-reminder-v6 .table-inline .table-label{font-size:14px;color:#555;margin-bottom:3px}
+        .cash-reminder-v6 .table-inline .table-no{font-size:25px;font-weight:900;line-height:1.15;color:#111}
+        @media(max-width:600px){.cash-reminder-v6 .table-inline .table-no{font-size:21px}}
       `;
       d.head.appendChild(css);
       const addTable=()=>{
         const popup=d.querySelector('.cash-reminder-v6');
-        if(!popup||popup.querySelector('.table-box'))return;
+        if(!popup||popup.querySelector('.table-inline'))return;
         const order=popup.querySelector('.order');
         const tn=d.getElementById('tn');
         if(!order||!tn)return;
         const tableText=(tn.textContent||'').trim();
         if(!tableText)return;
-        const box=d.createElement('div');
-        box.className='table-box';
-        const label=d.createElement('div');label.className='table-label';label.textContent='Nomor Meja';
-        const no=d.createElement('div');no.className='table-no';no.textContent=tableText;
-        box.append(label,no);
-        order.insertAdjacentElement('afterend',box);
+        const wrap=d.createElement('div');
+        wrap.className='table-inline';
+        const label=d.createElement('div');
+        label.className='table-label';
+        label.textContent='Nomor Meja';
+        const no=d.createElement('div');
+        no.className='table-no';
+        no.textContent=tableText;
+        wrap.append(label,no);
+        order.appendChild(wrap);
       };
       const observer=new MutationObserver(addTable);
       observer.observe(d.body,{childList:true,subtree:true});
