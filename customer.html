@@ -118,8 +118,28 @@ function install(doc,win){
       doc.documentElement.dataset.isshoMenuLayoutFinal='1';
       new MutationObserver(scan).observe(menu,{childList:true,subtree:true});
     }
+    installCrossCategorySearch(doc);
   }
   return !!menu&&menu.children.length>0;
+}
+
+function installCrossCategorySearch(doc){
+  if(!doc||!doc.defaultView||doc.documentElement.dataset.isshoSearchFixed)return;
+  const input=doc.getElementById('search');
+  if(!input)return;
+  doc.documentElement.dataset.isshoSearchFixed='1';
+  const script=doc.createElement('script');
+  script.textContent=`(()=>{
+    const input=document.getElementById('search'), menu=document.getElementById('menu'), count=document.getElementById('count');
+    if(!input||!menu)return;
+    input.oninput=()=>{
+      const q=(input.value||'').toLowerCase().trim();
+      const list=products.filter(p=>p.active===true && categories.some(c=>c.id===p.category_id && c.active===true) && (!q || (p.name+' '+(p.description||'')).toLowerCase().includes(q)));
+      count.textContent=q ? 'Hasil pencarian • '+list.length+' menu ditemukan' : (activeCat||'Menu')+' • '+products.filter(p=>p.active===true && categories.some(c=>c.id===p.category_id && c.active===true && c.name===activeCat)).length+' menu tersedia';
+      menu.innerHTML=list.length?list.map(p=>'<div class="menu"><div class="photo">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="'+esc(p.name)+'" onerror="this.parentElement.innerHTML=\'🖼️ Gambar belum tersedia\'">':'🖼️ Gambar belum tersedia')+'</div><h3>'+esc(p.name)+'</h3><div class="muted">'+esc(p.description||'')+'</div><div class="row" style="margin-top:auto"><b class="price">'+money(p.price)+'</b><button class="gold" onclick="add(\''+p.id+'\')">Tambah</button></div></div>').join(''):'<div class="card">Menu yang dicari tidak ditemukan.</div>';
+    };
+  })();`;
+  doc.body.appendChild(script);
 }
 
 function imagesReady(doc){
