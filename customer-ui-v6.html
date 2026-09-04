@@ -16,8 +16,9 @@ if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
 
-/* CUSTOMER ONLY: one clean line for menu information: image -> name -> price.
-   The old description is hidden because in many menu records it duplicates the name. */
+/* CUSTOMER ONLY: static visual menu.
+   Disable animation/transition/transform on menu cards and images so the
+   product pictures remain completely still while catalog data is checked. */
 function installMenu(doc,win){
   if(!doc||!doc.body)return false;
   const apply=()=>{
@@ -27,16 +28,18 @@ function installMenu(doc,win){
     if(!doc.getElementById(cssId)){
       const css=doc.createElement('style');css.id=cssId;
       css.textContent=`
-        #menu .menu{display:flex!important;flex-direction:column!important;min-height:0!important;height:auto!important;overflow:hidden!important}
-        #menu .menu>.photo{order:1!important;flex:0 0 auto!important;margin-bottom:5px!important}
-        #menu .menu>h3{order:2!important;display:block!important;font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:700!important;line-height:1.15!important;margin:0!important;padding:0!important;color:#fff!important;min-height:0!important}
+        #menu .menu{display:flex!important;flex-direction:column!important;min-height:0!important;height:auto!important;overflow:hidden!important;animation:none!important;transition:none!important;transform:none!important;will-change:auto!important}
+        #menu .menu>.photo{order:1!important;flex:0 0 auto!important;margin-bottom:5px!important;animation:none!important;transition:none!important;transform:none!important;will-change:auto!important;overflow:hidden!important}
+        #menu .menu>.photo img{display:block!important;width:100%!important;height:100%!important;min-width:100%!important;min-height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;animation:none!important;transition:none!important;transform:none!important;will-change:auto!important;position:static!important}
+        #menu .menu>h3{order:2!important;display:block!important;font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:700!important;line-height:1.15!important;margin:0!important;padding:0!important;color:#fff!important;min-height:0!important;animation:none!important;transition:none!important;transform:none!important}
         #menu .menu>.muted{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important}
-        #menu .menu>.row{order:3!important;display:flex!important;flex:0 0 auto!important;margin:1px 0 0!important;padding:0!important;align-items:center!important}
-        #menu .menu .price{font-family:Arial,sans-serif!important;font-size:18px!important;font-weight:900!important;line-height:1.1!important;margin:0!important;padding:0!important;color:#fff!important}
+        #menu .menu>.row{order:3!important;display:flex!important;flex:0 0 auto!important;margin:1px 0 0!important;padding:0!important;align-items:center!important;animation:none!important;transition:none!important;transform:none!important}
+        #menu .menu .price{font-family:Arial,sans-serif!important;font-size:18px!important;font-weight:900!important;line-height:1.1!important;margin:0!important;padding:0!important}
         #menu .menu .gold{flex:0 0 auto!important}
-        #menu .cat{font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:700!important}
+        #menu .cat{font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:700!important;animation:none!important;transition:none!important;transform:none!important}
         @media(max-width:600px){
           #menu .menu>.photo{margin-bottom:4px!important}
+          #menu .menu>.photo img{width:100%!important;height:100%!important}
           #menu .menu>h3{font-size:14px!important;font-weight:700!important;line-height:1.1!important;margin:0!important}
           #menu .menu>.row{margin-top:1px!important}
           #menu .menu .price{font-size:16px!important;font-weight:900!important;line-height:1.05!important}
@@ -49,9 +52,17 @@ function installMenu(doc,win){
       menu.style.setProperty('height','auto','important');
       menu.style.setProperty('display','flex','important');
       menu.style.setProperty('flex-direction','column','important');
+      menu.style.setProperty('animation','none','important');
+      menu.style.setProperty('transition','none','important');
+      menu.style.setProperty('transform','none','important');
+      menu.style.setProperty('will-change','auto','important');
+      const photo=menu.querySelector(':scope > .photo');
+      const image=menu.querySelector(':scope > .photo img');
       const title=menu.querySelector(':scope > h3');
       const desc=menu.querySelector(':scope > .muted');
       const row=menu.querySelector(':scope > .row');
+      if(photo){photo.style.setProperty('animation','none','important');photo.style.setProperty('transition','none','important');photo.style.setProperty('transform','none','important');photo.style.setProperty('will-change','auto','important');photo.style.setProperty('overflow','hidden','important')}
+      if(image){image.style.setProperty('display','block','important');image.style.setProperty('width','100%','important');image.style.setProperty('height','100%','important');image.style.setProperty('min-width','100%','important');image.style.setProperty('min-height','100%','important');image.style.setProperty('max-width','100%','important');image.style.setProperty('max-height','100%','important');image.style.setProperty('object-fit','contain','important');image.style.setProperty('animation','none','important');image.style.setProperty('transition','none','important');image.style.setProperty('transform','none','important');image.style.setProperty('will-change','auto','important');image.style.setProperty('position','static','important')}
       if(title){title.style.setProperty('font-family','Arial,sans-serif','important');title.style.setProperty('font-size','14px','important');title.style.setProperty('font-weight','700','important');title.style.setProperty('line-height','1.15','important');title.style.setProperty('margin','0','important');title.style.setProperty('padding','0','important')}
       if(desc){desc.style.setProperty('display','none','important');desc.style.setProperty('height','0','important');desc.style.setProperty('min-height','0','important');desc.style.setProperty('margin','0','important');desc.style.setProperty('padding','0','important')}
       if(row){row.style.setProperty('margin-top','1px','important');row.style.setProperty('margin-bottom','0','important');row.style.setProperty('padding','0','important');row.style.setProperty('flex','0 0 auto','important')}
