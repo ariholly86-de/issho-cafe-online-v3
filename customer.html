@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate"><meta http-equiv="Pragma"><meta http-equiv="Expires" content="0">
 <title>ISSHO CAFE — Menu Pelanggan</title>
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080909}iframe{width:100%;height:100%;border:0;display:block}</style>
 </head>
@@ -11,13 +11,24 @@
 <script>
 const f=document.getElementById('app');
 const qs=new URLSearchParams(location.search);
-const src=new URL('customer-ui-v6.html?v=20260904-steak-size-fix',location.href);
+const src=new URL('customer-ui-v6.html?v=20260904-static-catalog-lock',location.href);
 if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
 
-/* CUSTOMER ONLY: keep image elements static. Never replace/re-fetch image
-   sources in the browser. This prevents visible image jumping/flicker. */
+/* CUSTOMER ONLY: after the first catalog render, stop the child catalog
+   polling timers. The menu must not be rebuilt every second, which is what
+   causes images/cards to jump, blink or move after opening the page. */
+function stopChildIntervals(win){
+  if(!win||win.__isshoCatalogIntervalsStopped)return;
+  try{
+    win.__isshoCatalogIntervalsStopped=true;
+    for(let i=1;i<10000;i++){
+      try{win.clearInterval(i);}catch(e){}
+    }
+  }catch(e){}
+}
+
 function install(doc,win){
   if(!doc||!doc.body)return false;
   const scan=()=>{
@@ -100,12 +111,16 @@ function install(doc,win){
   };
   scan();
   const menu=doc.getElementById('menu');
-  if(menu&&!doc.documentElement.dataset.isshoMenuLayoutFinal){
-    doc.documentElement.dataset.isshoMenuLayoutFinal='1';
-    new MutationObserver(scan).observe(menu,{childList:true,subtree:true});
+  if(menu){
+    stopChildIntervals(win);
+    if(!doc.documentElement.dataset.isshoMenuLayoutFinal){
+      doc.documentElement.dataset.isshoMenuLayoutFinal='1';
+      new MutationObserver(scan).observe(menu,{childList:true,subtree:true});
+    }
   }
   return !!menu;
 }
+
 function walk(doc,win,depth=0){
   if(!doc||depth>8)return false;
   let found=false;
@@ -120,10 +135,13 @@ function walk(doc,win,depth=0){
   }catch(e){}
   return found;
 }
+
 f.addEventListener('load',()=>{
   walk(f.contentDocument,f.contentWindow);
-  const t=setInterval(()=>walk(f.contentDocument,f.contentWindow),500);
-  setTimeout(()=>clearInterval(t),30000);
+  const t=setInterval(()=>{
+    if(walk(f.contentDocument,f.contentWindow))clearInterval(t);
+  },250);
+  setTimeout(()=>clearInterval(t),10000);
 });
 </script>
 </body>
