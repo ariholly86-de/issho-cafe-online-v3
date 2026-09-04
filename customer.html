@@ -72,6 +72,13 @@ function install(doc,win){
         row.style.setProperty('flex','0 0 auto','important');
         row.style.setProperty('align-items','center','important');
       }
+      const price=menu.querySelector(':scope > .row .price, :scope > .price');
+      if(price){
+        price.style.setProperty('font-family','Arial, sans-serif','important');
+        price.style.setProperty('font-size','13px','important');
+        price.style.setProperty('font-weight','600','important');
+        price.style.setProperty('line-height','16px','important');
+      }
     });
     doc.querySelectorAll('#menu .photo img').forEach(img=>{
       img.style.setProperty('width','100%','important');
