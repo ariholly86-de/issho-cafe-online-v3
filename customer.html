@@ -11,7 +11,7 @@
 <script>
 const f=document.getElementById('app');
 const qs=new URLSearchParams(location.search);
-const src=new URL('customer-ui-v6.html?v=20260904-table-popup-final',location.href);
+const src=new URL('customer-ui-v6.html?v=20260904-menu-tight-2',location.href);
 if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
