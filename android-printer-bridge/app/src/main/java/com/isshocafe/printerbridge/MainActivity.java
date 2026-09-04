@@ -49,7 +49,29 @@ public class MainActivity extends Activity {
     private void startPrinterAutoConnect(){new Thread(()->{try{Thread.sleep(500);connectIfNeeded();ui("✓ RPP02N tersambung otomatis • Dapur siap cetak • Alarm aktif");}catch(Exception e){ui("RPP02N belum tersambung. Pastikan printer ON dan sudah Pair di Bluetooth Android. Alarm Dapur tetap aktif.");}}).start();}
     private BluetoothDevice findPrinter()throws Exception{if(adapter==null)throw new IOException("Tablet tidak mendukung Bluetooth.");if(android.os.Build.VERSION.SDK_INT>=31&&checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)!=PackageManager.PERMISSION_GRANTED)throw new IOException("Izin Bluetooth belum diberikan.");BluetoothDevice exact=null,fallback=null;for(BluetoothDevice d:adapter.getBondedDevices()){String name=d.getName();if(name==null)continue;if(PRINTER_NAME.equalsIgnoreCase(name.trim()))exact=d;else if(name.toUpperCase().contains("RPP02N"))fallback=d;}if(exact!=null)return exact;if(fallback!=null)return fallback;throw new IOException("Printer Bluetooth RPP02N belum di-pair. Pair RPP02N di Pengaturan Bluetooth Android terlebih dahulu.");}
     private synchronized void connectIfNeeded()throws Exception{if(out!=null&&socket!=null&&socket.isConnected())return;BluetoothDevice d=findPrinter();closePrinter();try{socket=d.createRfcommSocketToServiceRecord(SPP);socket.connect();}catch(Exception secure){closePrinter();socket=d.createInsecureRfcommSocketToServiceRecord(SPP);socket.connect();}out=socket.getOutputStream();}
-    private synchronized void send(byte[]data)throws Exception{connectIfNeeded();out.write(data);out.flush();}
+
+    // FIX: Bluetooth printer can keep a stale RFCOMM socket. A write on that socket
+    // may return "Broken pipe". Close the stale socket, reconnect and retry once.
+    private synchronized void send(byte[]data)throws Exception{
+        Exception last=null;
+        for(int attempt=0;attempt<2;attempt++){
+            try{
+                connectIfNeeded();
+                if(out==null)throw new IOException("Koneksi printer kosong.");
+                out.write(data);
+                out.flush();
+                return;
+            }catch(Exception e){
+                last=e;
+                closePrinter();
+                if(attempt==0){
+                    try{Thread.sleep(150);}catch(InterruptedException ie){Thread.currentThread().interrupt();}
+                }
+            }
+        }
+        throw last!=null?last:new IOException("Gagal mengirim data ke printer.");
+    }
+
     private byte[]testBytes(){ByteArrayOutputStream b=new ByteArrayOutputStream();b.write(27);b.write(64);b.write(27);b.write(97);b.write(1);b.write(27);b.write(69);b.write(1);text(b,"ISSHO CAFE\n");b.write(27);b.write(69);b.write(0);text(b,"TEST PRINT RPP02N\n");text(b,"BLUETOOTH CLASSIC / SPP\n");text(b,"ESC/POS 58mm\n");text(b,"--------------------------------\n");text(b,"PRINTER SIAP\n");text(b,"Koneksi Dapur BERHASIL\n\n\n");b.write(29);b.write(86);b.write(0);return b.toByteArray();}
     private void text(ByteArrayOutputStream b,String s){byte[]x=s.getBytes(StandardCharsets.UTF_8);b.write(x,0,x.length);}private synchronized void closePrinter(){try{if(out!=null)out.close();}catch(Exception ignored){}try{if(socket!=null)socket.close();}catch(Exception ignored){}out=null;socket=null;}private void ui(String s){runOnUiThread(()->{if(nativeStatus!=null)nativeStatus.setText(s);});}
     @Override public void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);if(web!=null&&!DAPUR_URL.equals(web.getUrl()))web.loadUrl(DAPUR_URL);}
