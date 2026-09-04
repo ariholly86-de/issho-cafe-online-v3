@@ -70,19 +70,18 @@ f.addEventListener('load',()=>{
     d.head.appendChild(s);
 
     const w=f.contentWindow;
-    const originalRenderCart=w.renderCart;
     const updateTopCart=()=>{
       const bar=d.getElementById('customer-topbar');
       if(!bar)return;
-      const count=(Array.isArray(w.cart)?w.cart:[]).reduce((n,x)=>n+(Number(x.qty)||0),0);
+      const items=Array.isArray(w.cart)?w.cart:[];
+      const count=items.reduce((n,x)=>n+(Number(x.qty)||0),0);
       let total=0;
-      (Array.isArray(w.cart)?w.cart:[]).forEach(x=>{const p=(w.products||[]).find(a=>a.id===x.id);if(p)total+=Number(p.price||0)*(Number(x.qty)||0)});
+      items.forEach(x=>{const p=(w.products||[]).find(a=>a.id===x.id);if(p)total+=Number(p.price||0)*(Number(x.qty)||0)});
       const badge=bar.querySelector('.cart-badge'),sum=bar.querySelector('.cart-summary'),box=bar.querySelector('.top-cart');
       if(badge)badge.textContent=count;
-      if(sum)sum.textContent=count?`${count} item • ${w.money(total)}`:'Keranjang masih kosong';
+      if(sum)sum.innerHTML=count?`<b>${count} item</b> • <b>${w.money(total)}</b>`:'Keranjang masih kosong';
       if(box)box.classList.toggle('has-items',count>0);
     };
-    w.renderCart=function(){originalRenderCart();updateTopCart()};
 
     const hero=d.querySelector('.hero');
     const tools=d.querySelector('.tools');
@@ -109,6 +108,18 @@ f.addEventListener('load',()=>{
       new MutationObserver(syncTable).observe(d.getElementById('tn')||d.body,{childList:true,subtree:true,characterData:true});
       syncTable();
       updateTopCart();
+
+      /* Keep the top cart synchronized with the real cart. The original add()/change()
+         functions use their lexical renderCart(), so replacing window.renderCart does not
+         intercept them. Observe the actual cart DOM and also poll the cart state lightly. */
+      const cartEl=d.getElementById('cart');
+      const totalEl=d.getElementById('tot');
+      if(cartEl||totalEl){
+        const syncCart=()=>updateTopCart();
+        if(cartEl)new MutationObserver(syncCart).observe(cartEl,{childList:true,subtree:true,characterData:true});
+        if(totalEl)new MutationObserver(syncCart).observe(totalEl,{childList:true,subtree:true,characterData:true});
+        setInterval(syncCart,250);
+      }
     }
 
     /* Cash flow: keep original order creation, only replace the success message with a clear reminder. */
