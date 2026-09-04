@@ -1,1 +1,29 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-store"><title>ISSHO CAFE — DAPUR</title><script>location.replace('/dapur-v8.html?v=20260825-kitchen-progress-v1');</script></head><body><p>Mengalihkan ke Dapur versi terbaru…</p></body></html>
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta http-equiv="Cache-Control" content="no-store">
+  <title>ISSHO CAFE — DAPUR</title>
+  <style>html,body{margin:0;height:100%;background:#0b0b0b;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center}.box{text-align:center;padding:24px}.spin{font-size:40px;margin-bottom:12px}.muted{color:#aaa;font-size:14px}a{color:#d5a15d}</style>
+</head>
+<body>
+  <div class="box">
+    <div class="spin">🍳</div>
+    <h2>ISSHO CAFE — DAPUR</h2>
+    <div class="muted">Membuka dashboard Dapur & koneksi printer…</div>
+    <div class="muted" style="margin-top:14px"><a id="fallback" href="/dapur-v8.html?v=20260904-single-link">Buka Dashboard Dapur</a></div>
+  </div>
+<script>
+(function(){
+  var fallback='/dapur-v8.html?v=20260904-single-link';
+  var ua=navigator.userAgent||'';
+  if(!/Android/i.test(ua)){location.replace(fallback);return;}
+  var timer=setTimeout(function(){location.replace(fallback)},1800);
+  document.getElementById('fallback').addEventListener('click',function(){clearTimeout(timer)});
+  try{location.href='isshocafe://dapur'}catch(e){}
+})();
+</script>
+</body>
+</html>
