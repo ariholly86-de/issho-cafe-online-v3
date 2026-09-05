@@ -13,10 +13,15 @@
   function ensureUI(){
     const d=ownerDoc();
     if(!d||!d.body)return false;
+    const login=d.getElementById('login'),app=d.getElementById('app');
+    if(!logged()){
+      if(box&&box.parentNode)box.parentNode.removeChild(box);
+      return true;
+    }
     if(!box||!d.body.contains(box)){
       box=d.createElement('div');
       box.id='issho-qris-control-inner';
-      box.style.cssText='margin-top:12px;padding:10px;border:1px solid #444;border-radius:12px;background:#101010;display:flex;flex-direction:column;gap:5px';
+      box.style.cssText='margin:0 0 12px 0;padding:10px;border:1px solid #444;border-radius:12px;background:#101010;display:flex;flex-direction:column;gap:5px';
       button=d.createElement('button');
       button.type='button';
       button.style.cssText='width:100%;border:0;border-radius:9px;padding:11px 14px;font-weight:900;color:#fff;cursor:pointer;font-size:13px';
@@ -26,17 +31,15 @@
       button.onclick=toggle;
       box.appendChild(button);box.appendChild(status);
     }
-    const login=d.getElementById('login'),app=d.getElementById('app');
-    const target=logged()?app:login;
-    if(target&&box.parentNode!==target){
-      target.appendChild(box);
+    if(app&&box.parentNode!==app){
+      app.insertBefore(box,app.firstChild);
     }
     return true;
   }
-  function paint(){if(!ensureUI()||!button)return;button.disabled=busy;button.style.opacity=busy?'.7':'1';button.textContent=enabled?'🟢 QRIS: AKTIF':'🔴 QRIS: NONAKTIF';button.style.background=enabled?'#2f7d50':'#a73d35';status.textContent=enabled?'Pelanggan dapat memilih QRIS':'QRIS disembunyikan di pelanggan';}
+  function paint(){if(!logged()){ensureUI();return}if(!ensureUI()||!button)return;button.disabled=busy;button.style.opacity=busy?'.7':'1';button.textContent=enabled?'🟢 QRIS: AKTIF':'🔴 QRIS: NONAKTIF';button.style.background=enabled?'#2f7d50':'#a73d35';status.textContent=enabled?'Pelanggan dapat memilih QRIS':'QRIS disembunyikan di pelanggan'}
   async function read(){try{const r=await api('/rest/v1/rpc/get_qris_status');enabled=!!(r&&((typeof r==='boolean')?r:r.value));}catch(e){console.warn('QRIS status read failed',e)}paint()}
   async function toggle(){if(busy||!logged())return;const p=pin();if(!/^\d{4,8}$/.test(p)){alert('Login Owner terlebih dahulu.');return}busy=true;paint();try{const next=!enabled;const r=await api('/rest/v1/rpc/owner_set_qris_status',{body:JSON.stringify({p_owner_pin:p,p_enabled:next})});enabled=!!(r&&((typeof r==='boolean')?r:r.value));paint()}catch(e){alert('Gagal mengubah status QRIS: '+e.message);await read()}finally{busy=false;paint()}}
-  function sync(){if(!ensureUI())return;if(logged())read();else{button.disabled=false;button.textContent='💳 QRIS: LOGIN OWNER';button.style.background='#315b9a';status.textContent='Login Owner untuk mengubah';}}
+  function sync(){if(!ensureUI())return;if(logged())read()}
   setInterval(sync,3000);setTimeout(sync,300);sync();
   if(ownerFrame())ownerFrame().addEventListener('load',()=>setTimeout(sync,300));
 })();
