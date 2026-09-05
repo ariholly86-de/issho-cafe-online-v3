@@ -21,13 +21,13 @@
     if(!box||!d.body.contains(box)){
       box=d.createElement('div');
       box.id='issho-qris-control-inner';
-      box.style.cssText='margin:0 0 12px 0;padding:10px;border:1px solid #444;border-radius:12px;background:#101010;display:flex;flex-direction:column;gap:5px';
+      box.style.cssText='margin:0 0 12px 0;padding:8px 10px;border:1px solid #444;border-radius:10px;background:#101010;display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:max-content;max-width:calc(100% - 20px);box-sizing:border-box';
       button=d.createElement('button');
       button.type='button';
-      button.style.cssText='width:100%;border:0;border-radius:9px;padding:11px 14px;font-weight:900;color:#fff;cursor:pointer;font-size:13px';
+      button.style.cssText='width:auto;min-width:0;border:0;border-radius:8px;padding:7px 11px;font-weight:900;color:#fff;cursor:pointer;font-size:12px;line-height:1.2;white-space:nowrap';
       button.textContent='💳 QRIS: MEMUAT...';
       status=d.createElement('div');
-      status.style.cssText='font:800 11px Arial;color:#bbb;text-align:center';
+      status.style.cssText='font:800 10px Arial;color:#bbb;text-align:left;line-height:1.2';
       button.onclick=toggle;
       box.appendChild(button);box.appendChild(status);
     }
