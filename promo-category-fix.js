@@ -41,6 +41,13 @@
     }catch(e){}
   }
   function start(){
+    /* The outer customer page intentionally hides its iframe while loading.
+       Reveal it as soon as this stable customer layer is available so a
+       catalog/image delay can never leave the customer page permanently blank. */
+    try{
+      const outer=window.parent&&window.parent.document&&window.parent.document.getElementById('app');
+      if(outer)outer.style.visibility='visible';
+    }catch(e){}
     const root=document.getElementById('app');
     if(root){
       const go=()=>{try{walk(root.contentDocument,root.contentWindow)}catch(e){}};
