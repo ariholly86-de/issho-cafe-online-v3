@@ -10,8 +10,15 @@
         try{
           const all=Array.isArray(win.categories)?win.categories:[];
           const prods=Array.isArray(win.products)?win.products:[];
+          /* Keep the original customer behavior: the first category with
+             active menus remains selected. PROMO is additionally visible,
+             even when it has no menu yet. */
           const cs=all.filter(c=>c.active===true&&(c.name===PROMO||prods.some(p=>p.category_id===c.id)));
-          if(!cs.some(c=>c.name===win.activeCat))win.activeCat=cs[0]?.name||'';
+          const current=cs.find(c=>c.name===win.activeCat);
+          if(!current){
+            const firstWithMenu=cs.find(c=>prods.some(p=>p.active===true&&p.category_id===c.id));
+            win.activeCat=firstWithMenu?.name||cs[0]?.name||'';
+          }
           cats.innerHTML=cs.map(c=>`<button type="button" class="cat ${win.activeCat===c.name?'active':''}" data-cat="${win.esc(c.name)}">${win.esc(c.name)}</button>`).join('');
           doc.querySelectorAll('#cats .cat').forEach(b=>b.onclick=()=>{win.activeCat=b.dataset.cat;win.renderCats();win.renderMenu()});
         }catch(e){original.call(win)}
