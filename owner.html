@@ -48,4 +48,6 @@ function closeModal(){modal.style.display='none'}
 async function restoreSelected(){const pin=getPin();if(!pin)return show('Silakan login Owner terlebih dahulu.');const ids=[...selected];if(!ids.length)return show('Pilih minimal satu menu.');if(!confirm('Pulihkan '+ids.length+' menu terpilih ke Pelanggan & Kasir?'))return;bulkBtn.disabled=true;bulkBtn.textContent='⏳ MEMULIHKAN '+ids.length+' MENU...';try{const d=await supa('/rest/v1/rpc/owner_restore_selected_products',{method:'POST',body:JSON.stringify({p_owner_pin:pin,p_product_ids:ids})});show('✓ '+(d.message||ids.length+' menu berhasil dipulihkan.'));selected.clear();await loadHidden();try{if(typeof frame.contentWindow.loadProducts==='function')await frame.contentWindow.loadProducts();}catch(e){}setTimeout(()=>{try{frame.contentWindow.location.reload()}catch(e){}},250)}catch(e){show('Gagal memulihkan: '+e.message);msgEl.innerHTML='<span style="color:#ffb4ad">Gagal: '+esc(e.message)+'</span>'}finally{bulkBtn.disabled=false;updateCount()}}
 topBtn.addEventListener('click',openModal);modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});updateCount();
 </script>
-<script src="/ui-standard.js?v=20260830-ui-v2"></script></body></html>
+<script src="/ui-standard.js?v=20260830-ui-v2"></script>
+<script src="/owner-master-rekap.js?v=20260905-master-rekap"></script>
+</body></html>
