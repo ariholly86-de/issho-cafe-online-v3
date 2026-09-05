@@ -9,5 +9,11 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/dapur-v8.html",
+      "destination": "/dapur-v8-fixed.html"
+    }
   ]
 }
