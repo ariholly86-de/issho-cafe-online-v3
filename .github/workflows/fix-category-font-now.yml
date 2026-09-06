@@ -1,0 +1,33 @@
+name: Fix customer category font
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply category regular font only
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('customer-ui-v3.html')
+          s=p.read_text(encoding='utf-8')
+          old=s
+          # Override category buttons/tabs only; preserve all behavior.
+          marker='  .tools{position:sticky;top:91px!important;z-index:20;background:#080909!important;padding:5px 0!important}.search{background:#111616!important;border-color:#3d4444!important}.cats{padding:7px 0!important}.cat{background:#172022!important;border-color:#3c484a!important}.cat.active{background:#b68142!important;border-color:#b68142!important}'
+          replacement=marker+'\n  .cats .cat,.cat{font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:400!important;line-height:1.2!important;text-shadow:none!important}'
+          if marker not in s:
+              raise SystemExit('Expected category CSS marker not found; refusing unrelated changes')
+          s=s.replace(marker,replacement,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add customer-ui-v3.html
+          git commit -m 'Make customer category font regular' || exit 0
+          git push
