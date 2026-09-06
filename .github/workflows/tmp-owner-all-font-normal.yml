@@ -2,6 +2,7 @@ name: Owner all font normal
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
@@ -10,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Force every Owner text to regular
+      - name: Force Owner text regular and slightly smaller
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -23,21 +24,28 @@ jobs:
               s=re.sub(r'font-weight\s*:\s*bold', 'font-weight:400', s, flags=re.I)
               s=s.replace('<b>','<span>').replace('</b>','</span>')
               s=s.replace('<strong>','<span>').replace('</strong>','</span>')
-              s=s.replace('owner-v3-safe.html?v=20260901-no-orders-01','owner-v3-safe.html?v=20260906-all-font-normal')
+              if fn=='owner-v3-safe.html':
+                  style='<style id="issho-owner-final-typography">html,html *,body,body *,#app,#app *,#login,#login *,#products,#products *,#orderList,#orderList *,#reportBox,#reportBox *,#pinbox,#pinbox *,#menu,#menu *,#reports,#reports *,#orders,#orders *,#master-rekap-detail,#master-rekap-detail *{font-weight:400!important;font-size:15px!important}input,select,textarea{font-size:14px!important}button,.btn{font-size:14px!important}</style>'
+                  if 'issho-owner-final-typography' not in s:
+                      s=s.replace('</head>',style+'</head>',1)
+              elif fn=='owner-rpp02n.html':
+                  style='<style id="issho-owner-wrapper-final-typography">html,html *,body,body *{font-weight:400!important;font-size:15px!important}.btn{font-size:14px!important}</style>'
+                  if 'issho-owner-wrapper-final-typography' not in s:
+                      s=s.replace('</head>',style+'</head>',1)
               p.write_text(s,encoding='utf-8')
           PY
-      - name: Verify and commit
+      - name: Verify no bold remains
         run: |
           python3 - <<'PY'
           from pathlib import Path
           for fn in ['owner-v3-safe.html','owner-rpp02n.html','owner-detail-repair.js']:
-              s=Path(fn).read_text(encoding='utf-8')
-              bad=['font-weight:900','font-weight:800','font-weight:700','font-weight:bold']
-              if any(x in s.lower() for x in bad):
-                  raise SystemExit(f'Bold weight remains in {fn}; refusing deployment')
+              s=Path(fn).read_text(encoding='utf-8').lower()
+              bad=['font-weight:900','font-weight:800','font-weight:700','font-weight:bold','<b>','</b>','<strong>','</strong>']
+              if any(x in s for x in bad):
+                  raise SystemExit(f'Bold remains in {fn}; refusing deployment')
           PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add owner-v3-safe.html owner-rpp02n.html owner-detail-repair.js
-          git commit -m 'Make all Owner text regular weight' || exit 0
+          git commit -m 'Make Owner typography smaller and regular' || exit 0
           git push
