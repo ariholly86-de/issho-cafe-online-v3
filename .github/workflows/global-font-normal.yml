@@ -1,0 +1,59 @@
+name: Apply Global Normal Font
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  font:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply style-only font override
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(
+            qr-meja.html
+            customer.html
+            customer-ui-v6.html
+            customer-ui-v5.html
+            customer-ui-v3.html
+            customer-live-fixed.html
+            staff-alarm-optimized.html
+            staff-printer-universal.html
+            dapur-v8.html
+            owner-rpp02n.html
+            owner-v3-safe.html
+            stock-v2.html
+          )
+          css='<style id="issho-global-normal-font">*,*::before,*::after{font-weight:400!important}.material-icons,.icon,[aria-hidden="true"]{font-weight:400!important}</style>'
+          for f in "${files[@]}"; do
+            test -f "$f"
+            if grep -q 'id="issho-global-normal-font"' "$f"; then
+              echo "already patched: $f"
+              continue
+            fi
+            python3 - "$f" "$css" <<'PY'
+          import sys
+          from pathlib import Path
+          p=Path(sys.argv[1]); css=sys.argv[2]
+          s=p.read_text(encoding='utf-8')
+          if '</head>' not in s:
+              raise SystemExit(f'Missing </head> in {p}')
+          s=s.replace('</head>', css+'</head>', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+          done
+          git diff --check
+          git diff --stat
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add qr-meja.html customer.html customer-ui-v6.html customer-ui-v5.html customer-ui-v3.html customer-live-fixed.html staff-alarm-optimized.html staff-printer-universal.html dapur-v8.html owner-rpp02n.html owner-v3-safe.html stock-v2.html
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Make all Issho Cafe text normal weight'
+          git push
