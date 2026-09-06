@@ -57,3 +57,4 @@ jobs:
           fi
           git commit -m 'Make all Issho Cafe text normal weight'
           git push
+# Style-only change; application logic is intentionally untouched.
