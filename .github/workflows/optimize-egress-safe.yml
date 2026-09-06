@@ -23,43 +23,39 @@ jobs:
 
           changed = []
 
-          # KASIR: Realtime is already the primary event source. Remove the
-          # aggressive 3-second RPC poll; the existing 60-second seed remains
-          # as a low-frequency fallback/resync.
+          # KASIR: Realtime remains primary. Remove the aggressive 3-second
+          # RPC poll; keep the existing 60-second seed as resync/fallback.
           p = Path('staff-alarm-optimized.html')
           s = p.read_text(encoding='utf-8')
-          old = 'setTimeout(()=>setInterval(pollAlarm,3000),2500)'
-          if old in s:
-              s = s.replace(old, 'setTimeout(()=>{},2500)', 1)
-              p.write_text(s, encoding='utf-8')
-              changed.append(str(p))
-          elif 'setInterval(pollAlarm,3000)' in s:
-              s2 = s.replace('setInterval(pollAlarm,3000)', 'setInterval(pollAlarm,60000)', 1)
-              if s2 != s:
-                  p.write_text(s2, encoding='utf-8')
-                  changed.append(str(p))
-          else:
-              raise SystemExit('KASIR safety check failed: expected 3-second poll pattern not found')
+          cashier_patterns = [
+              ('setTimeout(()=>setInterval(pollAlarm,3000),2500)', 'setTimeout(()=>{},2500)'),
+              ('setInterval(pollAlarm,3000)', 'setInterval(pollAlarm,60000)'),
+          ]
+          cashier_done = False
+          for old, new in cashier_patterns:
+              if old in s:
+                  s = s.replace(old, new, 1)
+                  cashier_done = True
+                  break
+          if not cashier_done:
+              raise SystemExit('KASIR safety check failed: 3-second poll pattern not found')
+          p.write_text(s, encoding='utf-8')
+          changed.append(str(p))
 
-          # DAPUR: keep all existing order/printer/status logic intact and only
-          # reduce the high-frequency refresh from 2.5s to 10s.
+          # DAPUR: only reduce the existing 2.5-second polling cadence.
+          # Do not alter order, payment, printer, status, date/time, or UI logic.
           p = Path('dapur-v8.html')
           s = p.read_text(encoding='utf-8')
-          patterns = [
-              (r'setInterval\(\s*load\s*,\s*2500\s*\)', 'setInterval(load,10000)'),
-              (r'setInterval\(\s*\(\)\s*=>\s*load\(\)\s*,\s*2500\s*\)', 'setInterval(()=>load(),10000)'),
-              (r'setInterval\(\s*refresh\s*,\s*2500\s*\)', 'setInterval(refresh,10000)'),
-              (r'setInterval\(\s*\(\)\s*=>\s*refresh\(\)\s*,\s*2500\s*\)', 'setInterval(()=>refresh(),10000)'),
-          ]
-          found = False
-          for pat, repl in patterns:
-              s2, n = re.subn(pat, repl, s, count=1)
-              if n:
-                  s = s2
-                  found = True
-                  break
-          if not found:
-              raise SystemExit('DAPUR safety check failed: expected 2.5-second load/refresh interval not found')
+          matches = list(re.finditer(r'setInterval\((.{0,800}?),2500\)', s, flags=re.S))
+          if len(matches) != 1:
+              print('DAPUR interval candidates:', len(matches))
+              for m in matches:
+                  print('CANDIDATE:', m.group(0)[:500])
+              raise SystemExit('DAPUR safety check failed: expected exactly one 2.5-second interval')
+          m = matches[0]
+          target = m.group(0)
+          replacement = target[:-5] + '10000)'  # replace trailing ,2500)
+          s = s[:m.start()] + replacement + s[m.end():]
           p.write_text(s, encoding='utf-8')
           changed.append(str(p))
 
