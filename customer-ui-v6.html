@@ -16,40 +16,20 @@ if(qs.get('table'))src.searchParams.set('table',qs.get('table'));
 if(location.hash)src.hash=location.hash.slice(1);
 f.src=src.toString();
 
-/* CUSTOMER ONLY: static menu display. */
 function installSearch(doc,win){
   if(!doc||!win||doc.documentElement.dataset.isshoCrossCategorySearch)return;
-  const input=doc.getElementById('search');
-  const menu=doc.getElementById('menu');
-  const count=doc.getElementById('count');
+  const input=doc.getElementById('search'),menu=doc.getElementById('menu'),count=doc.getElementById('count');
   if(!input||!menu||!count)return;
   doc.documentElement.dataset.isshoCrossCategorySearch='1';
   const script=doc.createElement('script');
-  script.textContent="(function(){\n"+
-    "const input=document.getElementById('search');\n"+
-    "const menu=document.getElementById('menu');\n"+
-    "const count=document.getElementById('count');\n"+
-    "if(!input||!menu||!count)return;\n"+
-    "function renderCrossCategorySearch(){\n"+
-      "const q=String(input.value||'').toLowerCase().trim();\n"+
-      "if(!q)return false;\n"+
-      "const list=products.filter(p=>p.active===true&&categories.some(c=>c.id===p.category_id&&c.active===true)&&((p.name+' '+(p.description||'')).toLowerCase().includes(q)));\n"+
-      "count.textContent='Hasil pencarian • '+list.length+' menu ditemukan';\n"+
-      "menu.innerHTML=list.length?list.map(p=>{const image=p.image_url?'<img src=\\\"'+esc(p.image_url)+'\\\" alt=\\\"'+esc(p.name)+'\\\" onerror=\\\"this.parentElement.innerHTML=\\\'🖼️ Gambar belum tersedia\\\'\\\">':'🖼️ Gambar belum tersedia';return '<div class=\\\"menu\\\"><div class=\\\"photo\\\">'+image+'</div><h3>'+esc(p.name)+'</h3><div class=\\\"muted\\\">'+esc(p.description||'')+'</div><div class=\\\"row\\\" style=\\\"margin-top:auto\\\"><b class=\\\"price\\\">'+money(p.price)+'</b><button class=\\\"gold\\\" onclick=\\\"add(\\\''+p.id+'\\\')\\\">Tambah</button></div></div>';}).join(''):'<div class=\\\"card\\\">Menu yang dicari tidak ditemukan.</div>';\n"+
-      "return true;\n"+
-    "}\n"+
-    "input.addEventListener('input',function(e){if(String(input.value||'').trim()){e.stopImmediatePropagation();renderCrossCategorySearch();}},true);\n"+
-    "input.addEventListener('change',function(){if(String(input.value||'').trim())renderCrossCategorySearch();},true);\n"+
-    "if(String(input.value||'').trim())renderCrossCategorySearch();\n"+
-  "})();";
+  script.textContent="(function(){const input=document.getElementById('search'),menu=document.getElementById('menu'),count=document.getElementById('count');if(!input||!menu||!count)return;function renderCrossCategorySearch(){const q=String(input.value||'').toLowerCase().trim();if(!q)return false;const list=products.filter(p=>p.active===true&&categories.some(c=>c.id===p.category_id&&c.active===true)&&((p.name+' '+(p.description||'')).toLowerCase().includes(q)));count.textContent='Hasil pencarian • '+list.length+' menu ditemukan';menu.innerHTML=list.length?list.map(p=>{const image=p.image_url?'<img src=\\\"'+esc(p.image_url)+'\\\" alt=\\\"'+esc(p.name)+'\\\" onerror=\\\"this.parentElement.innerHTML=\\\'🖼️ Gambar belum tersedia\\\'\\\">':'🖼️ Gambar belum tersedia';return '<div class=\\\"menu\\\"><div class=\\\"photo\\\">'+image+'</div><h3>'+esc(p.name)+'</h3><div class=\\\"muted\\\">'+esc(p.description||'')+'</div><div class=\\\"row\\\" style=\\\"margin-top:auto\\\"><b class=\\\"price\\\">'+money(p.price)+'</b><button class=\\\"gold\\\" onclick=\\\"add(\\\''+p.id+'\\\')\\\">Tambah</button></div></div>';}).join(''):'<div class=\\\"card\\\">Menu yang dicari tidak ditemukan.</div>';return true;}input.addEventListener('input',function(e){if(String(input.value||'').trim()){e.stopImmediatePropagation();renderCrossCategorySearch();}},true);input.addEventListener('change',function(){if(String(input.value||'').trim())renderCrossCategorySearch();},true);if(String(input.value||'').trim())renderCrossCategorySearch();})();";
   (doc.head||doc.documentElement).appendChild(script);
 }
 
 function installMenu(doc,win){
   if(!doc||!doc.body)return false;
   const apply=()=>{
-    const menus=doc.querySelectorAll('#menu .menu');
-    if(!menus.length)return false;
+    const menus=doc.querySelectorAll('#menu .menu'); if(!menus.length)return false;
     const cssId='issho-customer-static-menu-style';
     if(!doc.getElementById(cssId)){
       const css=doc.createElement('style');css.id=cssId;
@@ -62,103 +42,37 @@ function installMenu(doc,win){
         #menu .menu>.row{order:3!important;display:flex!important;flex:0 0 auto!important;margin:1px 0 0!important;padding:0!important;align-items:center!important;transition:none!important;animation:none!important;transform:none!important}
         #menu .menu .price{font-family:Arial,sans-serif!important;font-size:11px!important;font-weight:400!important;line-height:1.1!important;margin:0!important;padding:0!important;color:#fff!important}
         #menu .menu .gold{flex:0 0 auto!important}
-        #menu .cat{font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:700!important}
+        #menu .cat{font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:400!important}
         @media(max-width:600px){
           #menu .menu>.photo{margin-bottom:4px!important}
           #menu .menu>h3{font-size:11px!important;font-weight:400!important;line-height:1.1!important;margin:0!important}
           #menu .menu>.row{margin-top:1px!important}
           #menu .menu .price{font-size:11px!important;font-weight:400!important;line-height:1.05!important}
+          #menu .cat{font-size:14px!important;font-weight:400!important}
         }
       `;
       doc.head.appendChild(css);
     }
     menus.forEach(menu=>{
-      menu.style.setProperty('min-height','0','important');
-      menu.style.setProperty('height','auto','important');
-      menu.style.setProperty('display','flex','important');
-      menu.style.setProperty('flex-direction','column','important');
-      menu.style.setProperty('transition','none','important');
-      menu.style.setProperty('animation','none','important');
-      menu.style.setProperty('transform','none','important');
+      menu.style.setProperty('min-height','0','important');menu.style.setProperty('height','auto','important');menu.style.setProperty('display','flex','important');menu.style.setProperty('flex-direction','column','important');menu.style.setProperty('transition','none','important');menu.style.setProperty('animation','none','important');menu.style.setProperty('transform','none','important');
       const photo=menu.querySelector(':scope > .photo');
-      if(photo){
-        const mobile=win&&win.innerWidth<=600;
-        const h=mobile?'105px':'140px';
-        photo.style.setProperty('height',h,'important');
-        photo.style.setProperty('min-height',h,'important');
-        photo.style.setProperty('max-height',h,'important');
-        photo.style.setProperty('width','100%','important');
-        photo.style.setProperty('margin-bottom',mobile?'4px':'5px','important');
-        photo.style.setProperty('overflow','hidden','important');
-        photo.style.setProperty('padding','0','important');
-        photo.style.setProperty('display','grid','important');
-        photo.style.setProperty('place-items','center','important');
-        photo.style.setProperty('transition','none','important');
-        photo.style.setProperty('animation','none','important');
-        const img=photo.querySelector('img');
-        if(img){
-          img.style.setProperty('width','100%','important');
-          img.style.setProperty('height','100%','important');
-          img.style.setProperty('object-fit','contain','important');
-          img.style.setProperty('display','block','important');
-          img.style.setProperty('transition','none','important');
-          img.style.setProperty('animation','none','important');
-          const imageName=(img.getAttribute('alt')||'').toLowerCase();
-          img.style.setProperty('transform',imageName.includes('steak')?'scale(2.05)':'none','important');
-          img.style.setProperty('transform-origin','center center','important');
-        }
-      }
-      const title=menu.querySelector(':scope > h3');
-      const desc=menu.querySelector(':scope > .muted');
-      const row=menu.querySelector(':scope > .row');
+      if(photo){const mobile=win&&win.innerWidth<=600,h=mobile?'105px':'140px';photo.style.setProperty('height',h,'important');photo.style.setProperty('min-height',h,'important');photo.style.setProperty('max-height',h,'important');photo.style.setProperty('width','100%','important');photo.style.setProperty('margin-bottom',mobile?'4px':'5px','important');photo.style.setProperty('overflow','hidden','important');photo.style.setProperty('padding','0','important');photo.style.setProperty('display','grid','important');photo.style.setProperty('place-items','center','important');photo.style.setProperty('transition','none','important');photo.style.setProperty('animation','none','important');photo.style.setProperty('transform','none','important');const img=photo.querySelector('img');if(img){img.style.setProperty('width','100%','important');img.style.setProperty('height','100%','important');img.style.setProperty('object-fit','contain','important');img.style.setProperty('display','block','important');img.style.setProperty('transition','none','important');img.style.setProperty('animation','none','important');const imageName=(img.getAttribute('alt')||'').toLowerCase();img.style.setProperty('transform',imageName.includes('steak')?'scale(2.05)':'none','important');img.style.setProperty('transform-origin','center center','important')}}
+      const title=menu.querySelector(':scope > h3'),desc=menu.querySelector(':scope > .muted'),row=menu.querySelector(':scope > .row');
       if(title){title.style.setProperty('font-family','Arial,sans-serif','important');title.style.setProperty('font-size','11px','important');title.style.setProperty('font-weight','400','important');title.style.setProperty('line-height','1.15','important');title.style.setProperty('margin','0','important');title.style.setProperty('padding','0','important')}
       if(desc){desc.style.setProperty('display','none','important');desc.style.setProperty('height','0','important');desc.style.setProperty('min-height','0','important');desc.style.setProperty('margin','0','important');desc.style.setProperty('padding','0','important')}
       if(row){row.style.setProperty('margin-top','1px','important');row.style.setProperty('margin-bottom','0','important');row.style.setProperty('padding','0','important');row.style.setProperty('flex','0 0 auto','important')}
-      const price=menu.querySelector('.price');
-      if(price){price.style.setProperty('font-family','Arial,sans-serif','important');price.style.setProperty('font-size','11px','important');price.style.setProperty('font-weight','400','important');price.style.setProperty('line-height','1.1','important');price.style.setProperty('margin','0','important');price.style.setProperty('padding','0','important')}
+      const price=menu.querySelector('.price');if(price){price.style.setProperty('font-family','Arial,sans-serif','important');price.style.setProperty('font-size','11px','important');price.style.setProperty('font-weight','400','important');price.style.setProperty('line-height','1.1','important');price.style.setProperty('margin','0','important');price.style.setProperty('padding','0','important')}
     });
+    const cats=doc.querySelectorAll('#menu .cat');cats.forEach(cat=>{cat.style.setProperty('font-family','Arial,sans-serif','important');cat.style.setProperty('font-size','14px','important');cat.style.setProperty('font-weight','400','important');});
     return true;
   };
-  const ok=apply();
-  const root=doc.getElementById('menu');
-  if(root&&!root.dataset.isshoSimpleMenuObserver){
-    root.dataset.isshoSimpleMenuObserver='1';
-    new MutationObserver(apply).observe(root,{childList:true,subtree:true});
-  }
-  installSearch(doc,win);
-  return ok;
+  const ok=apply();const root=doc.getElementById('menu');
+  if(root&&!root.dataset.isshoSimpleMenuObserver){root.dataset.isshoSimpleMenuObserver='1';new MutationObserver(apply).observe(root,{childList:true,subtree:true});}
+  installSearch(doc,win);return ok;
 }
 
-function freezeCatalogPolling(doc,win){
-  try{
-    const menu=doc&&doc.getElementById('menu');
-    if(!menu||!menu.children.length||!win)return;
-    if(typeof win.loadCatalog==='function'&&!win.__isshoCatalogFrozen){
-      win.__isshoCatalogFrozen=true;
-      const original=win.loadCatalog;
-      win.loadCatalog=async function(initial=false){
-        if(initial)return original.call(this,true);
-        return null;
-      };
-    }
-  }catch(e){}
-}
-
-function walk(doc,win,depth=0){
-  if(!doc||depth>8)return;
-  try{
-    if(doc.getElementById('menu')){
-      installMenu(doc,win);
-      freezeCatalogPolling(doc,win);
-    }
-    doc.querySelectorAll('iframe').forEach(fr=>{
-      try{
-        if(fr.contentDocument)walk(fr.contentDocument,fr.contentWindow,depth+1);
-        fr.addEventListener('load',()=>{try{walk(fr.contentDocument,fr.contentWindow,depth+1)}catch(e){}},{once:true});
-      }catch(e){}
-    });
-  }catch(e){}
-}
+function freezeCatalogPolling(doc,win){try{const menu=doc&&doc.getElementById('menu');if(!menu||!menu.children.length||!win)return;if(typeof win.loadCatalog==='function'&&!win.__isshoCatalogFrozen){win.__isshoCatalogFrozen=true;const original=win.loadCatalog;win.loadCatalog=async function(initial=false){if(initial)return original.call(this,true);return null;};}}catch(e){}}
+function walk(doc,win,depth=0){if(!doc||depth>8)return;try{if(doc.getElementById('menu')){installMenu(doc,win);freezeCatalogPolling(doc,win);}doc.querySelectorAll('iframe').forEach(fr=>{try{if(fr.contentDocument)walk(fr.contentDocument,fr.contentWindow,depth+1);fr.addEventListener('load',()=>{try{walk(fr.contentDocument,fr.contentWindow,depth+1)}catch(e){}},{once:true});}catch(e){}});}catch(e){}}
 f.addEventListener('load',()=>walk(f.contentDocument,f.contentWindow));
 </script>
 </body>
