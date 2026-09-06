@@ -14,14 +14,14 @@
       if(!pd.getElementById('issho-owner-parent-typography')){
         const st=pd.createElement('style');
         st.id='issho-owner-parent-typography';
-        st.textContent='html,html *,body,body *{font-weight:400!important;font-size:14px!important}#tools *,#panel *{font-weight:400!important;font-size:14px!important}.btn{font-size:13px!important;font-weight:400!important}b,strong,h1,h2,h3,h4,h5,h6,button{font-weight:400!important}';
+        st.textContent='html,html *,body,body *{font-weight:400!important;font-size:13px!important}#tools *,#panel *{font-weight:400!important;font-size:13px!important}.btn{font-size:12px!important;font-weight:400!important}b,strong,h1,h2,h3,h4,h5,h6,button{font-weight:400!important}';
         pd.head.appendChild(st);
       }
       const d=ownerDoc();
       if(d&&d.head&&!d.getElementById('issho-owner-inner-typography')){
         const st=d.createElement('style');
         st.id='issho-owner-inner-typography';
-        st.textContent='html,html *,body,body *{font-weight:400!important;font-size:14px!important}b,strong,h1,h2,h3,h4,h5,h6,button,.btn,.badge,.stat,label,[style*=font-weight]{font-weight:400!important}.proof{font-size:14px!important}';
+        st.textContent='html,html *,body,body *{font-weight:400!important;font-size:13px!important}b,strong,h1,h2,h3,h4,h5,h6,button,.btn,.badge,.stat,label,[style*=font-weight]{font-weight:400!important}.proof{font-size:13px!important}';
         d.head.appendChild(st);
       }
     }catch(e){}
