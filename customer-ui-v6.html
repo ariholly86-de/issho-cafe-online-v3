@@ -57,17 +57,17 @@ function installMenu(doc,win){
         #menu .menu{display:flex!important;flex-direction:column!important;min-height:0!important;height:auto!important;overflow:hidden!important;transition:none!important;animation:none!important;transform:none!important}
         #menu .menu>.photo{order:1!important;flex:0 0 auto!important;margin-bottom:5px!important;transition:none!important;animation:none!important;transform:none!important}
         #menu .menu>.photo img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;transition:none!important;animation:none!important}
-        #menu .menu>h3{order:2!important;display:block!important;font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:700!important;line-height:1.15!important;margin:0!important;padding:0!important;color:#fff!important;min-height:0!important;transition:none!important;animation:none!important;transform:none!important}
+        #menu .menu>h3{order:2!important;display:block!important;font-family:Arial,sans-serif!important;font-size:11px!important;font-weight:400!important;line-height:1.15!important;margin:0!important;padding:0!important;color:#fff!important;min-height:0!important;transition:none!important;animation:none!important;transform:none!important}
         #menu .menu>.muted{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important}
         #menu .menu>.row{order:3!important;display:flex!important;flex:0 0 auto!important;margin:1px 0 0!important;padding:0!important;align-items:center!important;transition:none!important;animation:none!important;transform:none!important}
-        #menu .menu .price{font-family:Arial,sans-serif!important;font-size:18px!important;font-weight:900!important;line-height:1.1!important;margin:0!important;padding:0!important;color:#fff!important}
+        #menu .menu .price{font-family:Arial,sans-serif!important;font-size:11px!important;font-weight:400!important;line-height:1.1!important;margin:0!important;padding:0!important;color:#fff!important}
         #menu .menu .gold{flex:0 0 auto!important}
         #menu .cat{font-family:Arial,sans-serif!important;font-size:14px!important;font-weight:700!important}
         @media(max-width:600px){
           #menu .menu>.photo{margin-bottom:4px!important}
-          #menu .menu>h3{font-size:14px!important;font-weight:700!important;line-height:1.1!important;margin:0!important}
+          #menu .menu>h3{font-size:11px!important;font-weight:400!important;line-height:1.1!important;margin:0!important}
           #menu .menu>.row{margin-top:1px!important}
-          #menu .menu .price{font-size:16px!important;font-weight:900!important;line-height:1.05!important}
+          #menu .menu .price{font-size:11px!important;font-weight:400!important;line-height:1.05!important}
         }
       `;
       doc.head.appendChild(css);
@@ -111,11 +111,11 @@ function installMenu(doc,win){
       const title=menu.querySelector(':scope > h3');
       const desc=menu.querySelector(':scope > .muted');
       const row=menu.querySelector(':scope > .row');
-      if(title){title.style.setProperty('font-family','Arial,sans-serif','important');title.style.setProperty('font-size','14px','important');title.style.setProperty('font-weight','700','important');title.style.setProperty('line-height','1.15','important');title.style.setProperty('margin','0','important');title.style.setProperty('padding','0','important')}
+      if(title){title.style.setProperty('font-family','Arial,sans-serif','important');title.style.setProperty('font-size','11px','important');title.style.setProperty('font-weight','400','important');title.style.setProperty('line-height','1.15','important');title.style.setProperty('margin','0','important');title.style.setProperty('padding','0','important')}
       if(desc){desc.style.setProperty('display','none','important');desc.style.setProperty('height','0','important');desc.style.setProperty('min-height','0','important');desc.style.setProperty('margin','0','important');desc.style.setProperty('padding','0','important')}
       if(row){row.style.setProperty('margin-top','1px','important');row.style.setProperty('margin-bottom','0','important');row.style.setProperty('padding','0','important');row.style.setProperty('flex','0 0 auto','important')}
       const price=menu.querySelector('.price');
-      if(price){price.style.setProperty('font-family','Arial,sans-serif','important');price.style.setProperty('font-size',win&&win.innerWidth<=600?'16px':'18px','important');price.style.setProperty('font-weight','900','important');price.style.setProperty('line-height','1.1','important');price.style.setProperty('margin','0','important');price.style.setProperty('padding','0','important')}
+      if(price){price.style.setProperty('font-family','Arial,sans-serif','important');price.style.setProperty('font-size','11px','important');price.style.setProperty('font-weight','400','important');price.style.setProperty('line-height','1.1','important');price.style.setProperty('margin','0','important');price.style.setProperty('padding','0','important')}
     });
     return true;
   };
