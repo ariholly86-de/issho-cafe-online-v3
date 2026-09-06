@@ -1,0 +1,28 @@
+name: Restore Owner Safe
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore owner-v3-safe from known-good commit
+        run: |
+          set -e
+          git checkout a3a2c9f1434fd573c34efb9f10ea28da6621d8cd -- owner-v3-safe.html
+          if git diff --quiet -- owner-v3-safe.html; then
+            echo "Owner file already matches known-good version"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add owner-v3-safe.html
+          git commit -m "Restore functional Owner page"
+          git pull --rebase origin main
+          git push origin HEAD:main
