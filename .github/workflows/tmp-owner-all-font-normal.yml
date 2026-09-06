@@ -1,0 +1,33 @@
+name: Owner all font normal
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  normalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Force all Owner text normal
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          style='''<style id="issho-owner-force-normal-font">html,html *,body,body *,#app,#app *,#login,#login *,#products,#products *,#orderList,#orderList *,#reportBox,#reportBox *,#pinbox,#pinbox *,#menu,#menu *,#reports,#reports *,#orders,#orders *,#master-rekap-detail,#master-rekap-detail *{font-weight:400!important}b,strong,h1,h2,h3,h4,h5,h6,button,.btn,.badge,.stat,label,[style*="font-weight"]{font-weight:400!important}</style>'''
+          for fn in ['owner-v3-safe.html','owner-rpp02n.html']:
+              p=Path(fn)
+              if not p.exists(): continue
+              s=p.read_text(encoding='utf-8')
+              if 'issho-owner-force-normal-font' in s: continue
+              s=s.replace('</head>', style+'</head>', 1)
+              p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit style-only change and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add owner-v3-safe.html owner-rpp02n.html
+          git commit -m "Force all Owner text to normal weight" || true
+          git push
