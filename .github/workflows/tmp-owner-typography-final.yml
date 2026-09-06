@@ -1,0 +1,43 @@
+name: Owner typography final
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make Owner text smaller and never bold
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('owner-rpp02n.html')
+          s=p.read_text(encoding='utf-8')
+          css='<style id="issho-owner-typography-final">html,html *,body,body *{font-weight:400!important;font-size:14px!important} .btn{font-size:13px!important;font-weight:400!important} h1,h2,h3,h4,h5,h6,b,strong,button,.btn,.name,.badge,.stat,label,[style*="font-weight"]{font-weight:400!important}</style>'
+          if 'id="issho-owner-typography-final"' in s:
+              s=re.sub(r'<style id="issho-owner-typography-final">.*?</style>', css, s, count=1, flags=re.S)
+          else:
+              s=s.replace('</head>',css+'</head>',1)
+          s=s.replace('owner-v3-safe.html?v=20260901-no-orders-01','owner-v3-safe.html?v=20260906-owner-typography-final')
+          p.write_text(s,encoding='utf-8')
+          PY
+          rm -f .github/workflows/tmp-owner-typography-final.yml
+          git diff --check
+      - name: Verify
+        run: |
+          grep -q 'issho-owner-typography-final' owner-rpp02n.html
+          grep -q 'font-size:14px!important' owner-rpp02n.html
+          grep -q 'font-weight:400!important' owner-rpp02n.html
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add owner-rpp02n.html .github/workflows/tmp-owner-typography-final.yml
+          git commit -m 'Make Owner typography smaller and regular' || exit 0
+          git push
