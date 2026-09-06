@@ -1,0 +1,32 @@
+name: TEMP Dapur Font Normalization
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmp-dapur-font-normal.yml'
+permissions:
+  contents: write
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply style-only Dapur font override
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('dapur-v8.html')
+          s=p.read_text(encoding='utf-8')
+          old='<style id="issho-global-normal-font">*,*::before,*::after{font-weight:400!important}.material-icons,.icon,[aria-hidden="true"]{font-weight:400!important}</style>'
+          new='<style id="issho-global-normal-font">*,*::before,*::after{font-weight:400!important}button,b,strong,h1,h2,h3,h4,h5,h6,.badge,.alarm,.order-date,.order-time,.part,.item,.autoBtn,.printBtn,.statusBtn,.partBtn,.history-title,.printer,.printerBtns,.muted,.live{font-weight:400!important}.material-icons,.icon,[aria-hidden="true"]{font-weight:400!important}</style>'
+          if old not in s:
+              raise SystemExit('Expected Dapur global font style not found')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
+      - name: Commit style-only change
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dapur-v8.html
+          git diff --cached --quiet || git commit -m 'Normalize Dapur text weight only'
+          git push
