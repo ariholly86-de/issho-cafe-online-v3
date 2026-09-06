@@ -30,3 +30,4 @@ jobs:
           git add dapur-v8.html
           git diff --cached --quiet || git commit -m 'Normalize Dapur text weight only'
           git push
+# trigger
