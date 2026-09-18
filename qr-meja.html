@@ -6,21 +6,78 @@
 <title>ISSHO CAFE - QR Meja 01-50 + Menu Online</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f3eee6;color:#211d18}.top{position:sticky;top:0;background:#171411;color:#fff;padding:14px;z-index:5}.wrap{max-width:1100px;margin:auto}.btn{background:#b68142;color:#fff;padding:10px 14px;border:0;border-radius:10px;font-weight:800;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;padding:18px}.card{background:#fff;border:1px solid #ddd0c0;border-radius:14px;padding:16px;text-align:center;break-inside:avoid}.table{font-size:26px;font-weight:900;margin:6px}.qr{display:flex;justify-content:center}.scan{font-weight:900;margin-top:8px}.note{font-size:12px;opacity:.75;margin-top:5px}@media(max-width:700px){.grid{grid-template-columns:1fr}}@page{size:A4 portrait;margin:5mm}@media print{.top{display:none}body{background:#fff}.wrap{max-width:none}.grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:92mm;gap:5mm;padding:0}.card{border:1px solid #aaa;border-radius:0;height:92mm;min-height:0;padding:5mm;break-inside:avoid;page-break-inside:avoid;overflow:hidden}.table{font-size:19px;margin:2px}.qr img{width:46mm!important;height:46mm!important}.scan{font-size:12px;margin-top:3px}.note{font-size:9px;margin-top:2px}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f3eee6;color:#211d18}
+.top{position:sticky;top:0;background:#171411;color:#fff;padding:14px;z-index:5}
+.wrap{max-width:1100px;margin:auto}
+.btn{background:#b68142;color:#fff;padding:10px 14px;border:0;border-radius:10px;font-weight:800;cursor:pointer}
+.grid{display:block;padding:18px}
+.print-page{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:16px}
+.card{background:#fff;border:1px solid #ddd0c0;border-radius:14px;padding:16px;text-align:center;break-inside:avoid}
+.table{font-size:26px;font-weight:900;margin:6px}
+.qr{display:flex;justify-content:center}
+.scan{font-weight:900;margin-top:8px}
+.note{font-size:12px;opacity:.75;margin-top:5px}
+@media(max-width:700px){.print-page{grid-template-columns:1fr}}
+@page{size:A4 portrait;margin:0}
+@media print{
+  html,body{width:210mm;margin:0;background:#fff}
+  .top{display:none}
+  .wrap{max-width:none;width:210mm;margin:0}
+  .grid{padding:0;margin:0}
+  .print-page{
+    width:210mm;
+    height:297mm;
+    padding:5mm;
+    display:grid;
+    grid-template-columns:92.5mm 92.5mm;
+    grid-template-rows:92mm 92mm 92mm;
+    column-gap:5mm;
+    row-gap:5mm;
+    margin:0;
+    break-after:page;
+    page-break-after:always;
+  }
+  .print-page:last-child{break-after:auto;page-break-after:auto}
+  .card{
+    width:92.5mm;
+    height:92mm;
+    min-height:0;
+    padding:4mm;
+    border:1px solid #aaa;
+    border-radius:0;
+    overflow:hidden;
+    break-inside:avoid;
+    page-break-inside:avoid;
+  }
+  .table{font-size:18px;margin:1px}
+  .qr img{width:45mm!important;height:45mm!important}
+  .scan{font-size:11px;margin-top:2px}
+  .note{font-size:8px;margin-top:2px}
+}
 </style>
-<style id="issho-global-normal-font">*,*::before,*::after{font-weight:400!important}.material-icons,.icon,[aria-hidden="true"]{font-weight:400!important}</style></head>
+<style id="issho-global-normal-font">*,*::before,*::after{font-weight:400!important}.material-icons,.icon,[aria-hidden="true"]{font-weight:400!important}</style>
+</head>
 <body>
-<div class="top"><div class="wrap"><b>ISSHO CAFE — QR MEJA 01–50 + MENU ONLINE</b><button class="btn" onclick="window.print()" style="float:right">Cetak A4 • 6 QR / Lembar</button><div style="font-size:12px;opacity:.8;margin-top:4px">QR permanen: membuka menu pelanggan terbaru secara otomatis.</div></div></div>
+<div class="top"><div class="wrap"><b>ISSHO CAFE — QR MEJA 01–50 + MENU ONLINE</b><button class="btn" onclick="window.print()" style="float:right">Cetak A4 • 6 QR / Lembar</button><div style="font-size:12px;opacity:.8;margin-top:4px">Setiap 1 kertas A4 berisi tepat 6 QR barcode.</div></div></div>
 <div class="wrap"><div id="grid" class="grid"></div></div>
 <script>
 const base='https://issho-cafe-online-v3.vercel.app/customer.html?table=';
 const g=document.getElementById('grid');
-function addCard(label, qrValue, id, note){
+let page=null;
+let count=0;
+function addCard(label,qrValue,id,note){
+  if(count%6===0){
+    page=document.createElement('div');
+    page.className='print-page';
+    g.appendChild(page);
+  }
   const c=document.createElement('div');
   c.className='card';
   c.innerHTML=`<b>ISSHO CAFE</b><div class="table">${label}</div><div class="qr" id="q${id}"></div><div class="scan">SCAN UNTUK MEMESAN</div><div class="note">${note}</div>`;
-  g.appendChild(c);
+  page.appendChild(c);
   new QRCode(document.getElementById('q'+id),{text:base+encodeURIComponent(qrValue),width:260,height:260,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+  count++;
 }
 for(let n=1;n<=50;n++){
   const s=String(n).padStart(2,'0');
@@ -28,5 +85,6 @@ for(let n=1;n<=50;n++){
 }
 addCard('MENU ONLINE','menu-online','online','Akses menu online • terhubung ke sistem pesanan ISSHO CAFE.');
 </script>
-<script src="/ui-standard.js?v=20260830-ui-v2"></script></body>
+<script src="/ui-standard.js?v=20260830-ui-v2"></script>
+</body>
 </html>
