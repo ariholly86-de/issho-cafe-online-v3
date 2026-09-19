@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>ISSHO CAFE — DAPUR PRINTER</title>
+<style>
+html,body{margin:0;height:100%;background:#0b0b0b;color:#fff;font-family:Arial,sans-serif}
+#bar{position:fixed;z-index:99999;top:0;left:0;right:0;background:#171411;padding:10px;text-align:center;border-bottom:1px solid #333}
+#enable{background:#2f8b59;color:#fff;border:0;border-radius:9px;padding:11px 18px;font-weight:700}
+#status{margin-left:10px;color:#ddd;font-size:13px}
+iframe{position:absolute;top:52px;left:0;width:100%;height:calc(100% - 52px);border:0}
+</style>
+</head>
+<body>
+<div id="bar">
+<button id="enable">AKTIFKAN PRINTER</button>
+<span id="status">Hubungkan WP58D di Bluetooth, buka Cleanter, lalu tekan tombol ini.</span>
+</div>
+<iframe id="app" src="/dapur-v8.html?v=20260919-printfix"></iframe>
+<script>
+const BRIDGE='http://localhost:9100';
+const statusEl=document.getElementById('status');
+const btn=document.getElementById('enable');
+const frame=document.getElementById('app');
+
+async function health(){
+  const r=await fetch(BRIDGE+'/health',{cache:'no-store'});
+  if(!r.ok) throw new Error('Cleanter HTTP '+r.status);
+  return await r.json();
+}
+
+async function activate(){
+  btn.disabled=true;
+  statusEl.textContent='Memeriksa Cleanter...';
+  try{
+    const h=await health();
+    if(!h.printer?.connected) {
+      throw new Error('Cleanter aktif, tetapi printer belum terhubung. Pilih WP58D sebagai default printer di Cleanter.');
+    }
+    statusEl.textContent='Printer terhubung. Menyiapkan Dapur...';
+    const w=frame.contentWindow;
+    if(w){
+      w.__CLEANter_FIXED__=true;
+      w.bridge=async function(path,method='GET',body=null){
+        if(path==='/status'||path==='/connect'){
+          const x=await health();
+          if(!x.printer?.connected) throw new Error('Printer belum terhubung');
+          return {connected:true,printer:x.printer};
+        }
+        if(path==='/test'){
+          return printJSON({
+            cut:true,
+            content:[
+              {type:'text',text:'ISSHO CAFE',align:'center',bold:true,size:'large'},
+              {type:'text',text:'TEST PRINT DAPUR',align:'center'},
+              {type:'divider'},
+              {type:'text',text:'Printer WP58D / RPP02N OK',align:'center'},
+              {type:'feed',lines:3}
+            ]
+          });
+        }
+        if(path==='/print'){
+          return printFromRaw(body);
+        }
+        return {ok:true};
+      };
+      if(typeof w.checkBridge==='function') await w.checkBridge();
+    }
+    statusEl.textContent='PRINTER SIAP — Dapur dapat mencetak otomatis.';
+    btn.textContent='PRINTER AKTIF';
+  }catch(e){
+    statusEl.textContent='GAGAL: '+(e.message||e);
+    btn.disabled=false;
+  }
+}
+
+async function printJSON(payload){
+  const r=await fetch(BRIDGE+'/print',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload),
+    cache:'no-store'
+  });
+  const t=await r.text();
+  if(!r.ok) throw new Error(t||('Print HTTP '+r.status));
+  try{return JSON.parse(t)}catch{return {ok:true}}
+}
+
+function decodeRaw(u8){
+  let s=new TextDecoder().decode(u8);
+  s=s.replace(/\x1b@/g,'').replace(/\x1dv0/g,'').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g,'');
+  s=s.replace(/\x1b\x40/g,'').replace(/\x1d\x56\x00/g,'');
+  return s;
+}
+
+async function printFromRaw(body){
+  const bytes=body instanceof Uint8Array?body:new Uint8Array(body||[]);
+  const raw=decodeRaw(bytes);
+  const lines=raw.split(/\r?\n/);
+  const content=[];
+  for(const line of lines){
+    if(!line.trim()) { content.push({type:'feed',lines:1}); continue; }
+    if(/^[-=]{8,}$/.test(line.trim())) content.push({type:'divider',char:line.trim()[0]});
+    else content.push({type:'text',text:line});
+  }
+  content.push({type:'feed',lines:2});
+  return printJSON({cut:true,content});
+}
+
+btn.addEventListener('click',activate);
+frame.addEventListener('load',()=>{
+  try{
+    const w=frame.contentWindow;
+    if(w){
+      w.bridge=async function(path,method='GET',body=null){
+        if(path==='/status'||path==='/connect'){
+          const h=await health();
+          if(!h.printer?.connected) throw new Error('Printer belum terhubung');
+          return {connected:true,printer:h.printer};
+        }
+        if(path==='/print') return printFromRaw(body);
+        if(path==='/test') return printJSON({cut:true,content:[
+          {type:'text',text:'ISSHO CAFE',align:'center',bold:true},
+          {type:'text',text:'TEST PRINT DAPUR',align:'center'},
+          {type:'divider'},
+          {type:'text',text:'PRINTER OK',align:'center'},
+          {type:'feed',lines:3}
+        ]});
+        return {ok:true};
+      };
+    }
+  }catch(e){}
+});
+</script>
+</body>
+</html>
