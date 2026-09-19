@@ -12,6 +12,14 @@
   ],
   "rewrites": [
     {
+      "source": "/dapur",
+      "destination": "/dapur-v8-fixed.html"
+    },
+    {
+      "source": "/dapur/",
+      "destination": "/dapur-v8-fixed.html"
+    },
+    {
       "source": "/dapur-v8.html",
       "destination": "/dapur-v8-fixed.html"
     }
