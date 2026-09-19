@@ -13,15 +13,15 @@
   "rewrites": [
     {
       "source": "/dapur",
-      "destination": "/dapur-cleanter-live.html?v=2026091923"
+      "destination": "/dapur-cleanter-live.html?v=2026092001"
     },
     {
       "source": "/dapur/",
-      "destination": "/dapur-cleanter-live.html?v=2026091923"
+      "destination": "/dapur-cleanter-live.html?v=2026092001"
     },
     {
       "source": "/dapur-v8.html",
-      "destination": "/dapur-cleanter-live.html?v=2026091923"
+      "destination": "/dapur-cleanter-live.html?v=2026092001"
     }
   ]
 }
