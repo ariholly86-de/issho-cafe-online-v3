@@ -21,27 +21,113 @@ function panel(o,p,label,icon){const a=items(o,p),d=done(o,p),n=a.reduce((x,i)=>
 function card(o,history){const dt=orderDateTime(o);return '<div class="order '+(history?'history-order':'')+'"><div class="row"><div><h2 style="margin:0">'+esc(o.order_number)+'</h2><span class="order-date">Tanggal Order: '+dt.date+'</span><span class="order-time">Jam Order: '+dt.time+' WIB</span><span class="badge">Meja '+esc(o.table_name||'Take Away')+'</span><span class="badge">'+esc(o.payment_status)+'</span><span class="badge">'+esc(o.order_status)+'</span></div><b>'+money(o.total)+'</b></div>'+(o.items||[]).map(i=>'<div class="item"><b>'+esc(i.name)+'</b> × '+i.qty+(i.category_name?'<span class="badge">'+esc(i.category_name)+'</span>':'')+'</div>').join('')+(history?'':'<div class="parts">'+panel(o,'DRINK','Minuman','🥤')+panel(o,'FOOD','Makanan','🍽️')+'</div><div class="actions"><button class="autoBtn autoPrintBtn" data-id="'+o.id+'">⚡ AUTO PRINT</button><button class="printBtn manualPrintBtn" data-id="'+o.id+'">🖨️ Print Manual</button>'+((o.order_status==='NEW'||o.order_status==='ACCEPTED')?'<button class="statusBtn gold" data-id="'+o.id+'" data-status="PREPARING">👨‍🍳 Mulai Dikerjakan</button>':'')+(o.order_status==='PREPARING'?(allDone(o)?'<button class="statusBtn green" data-id="'+o.id+'" data-status="READY">✓ Semua Bagian Selesai / Siap</button>':'<span class="badge">⏳ Selesaikan makanan &/atau minuman terlebih dahulu</span>'):'')+(o.order_status==='READY'?'<button class="statusBtn green" data-id="'+o.id+'" data-status="COMPLETED">✓ Selesai / Tutup</button>':'')+'</div>')+'</div>'}
 function isToday(o){const raw=o?.created_at;if(!raw)return false;const d=new Date(raw),now=new Date();return d.toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'})===now.toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'})}
 function render(){const paid=ORD.filter(o=>o.payment_status==='PAID');const rows=paid.filter(o=>!['COMPLETED','CANCELLED'].includes(o.order_status));const hist=paid.filter(o=>isToday(o)&&['COMPLETED','CANCELLED'].includes(o.order_status));$('state').textContent=rows.length?rows.length+' order aktif':hist.length?('Tidak ada order aktif • '+hist.length+' histori hari ini'):'Tidak ada order aktif';$('list').innerHTML=rows.length?rows.map(o=>card(o,false)).join(''):'<div class="card muted">Belum ada pesanan aktif yang sudah dibayar.</div>';$('history').innerHTML=hist.length?'<div class="card history-title"><h2 style="margin:0 0 4px">📋 Riwayat Order Hari Ini</h2><div class="muted">Order yang sudah selesai tetap ditampilkan agar transaksi asli tidak hilang dari layar Dapur.</div></div>'+hist.map(o=>card(o,true)).join(''):''}
-// FIX PRINT: do not send application/octet-stream header to the local bridge.
-// That header forces a CORS/PNA preflight which many small Android printer bridges do not answer.
-// The raw Uint8Array is still sent unchanged as the POST body.
-async function bridge(path,method='GET',body=null){let last='';for(const host of BRIDGE_HOSTS){try{const opt={method,body,cache:'no-store'};try{opt.targetAddressSpace='loopback'}catch(e){}const r=await fetch(host+path,opt);const t=await r.text();let j;try{j=JSON.parse(t)}catch(e){j={ok:r.ok,error:t}}if(!r.ok||j.ok===false)throw Error(j.error||('Bridge HTTP '+r.status));return j}catch(e){last=e.message||String(e)}}throw Error(last||'Printer Bridge tidak dapat dihubungi')}
-async function connectBridge(){const j=await bridge('/connect','POST',new Uint8Array());if(!j.connected)throw Error('Printer Bridge merespons tetapi printer belum terhubung.');bridgeOK=true;$('printerStatus').textContent='🟢 Printer RPP02N terhubung • AUTO PRINT AKTIF';return true}
-async function checkBridge(){try{const j=await bridge('/status');if(j.connected){bridgeOK=true;$('printerStatus').textContent='🟢 Printer RPP02N terhubung • AUTO PRINT AKTIF';return true}try{await connectBridge();return true}catch(e){}}catch(e){}bridgeOK=false;$('printerStatus').textContent=serialConnected?'🟢 Printer COM terhubung • AUTO PRINT AKTIF':'🟡 Printer belum terhubung • gunakan Printer Bridge Android atau Hubungkan Printer';return false}
-function escBytes(s){return new TextEncoder().encode(s)}
+// CLEANter v1.1+ JSON bridge. First /health call must happen from a user gesture on HTTPS/Chrome.
+let localNetworkGranted=false;
+async function bridge(path,method='GET',body=null){
+  const opt={method,cache:'no-store'};
+  if(body!==null){opt.headers={'Content-Type':'application/json'};opt.body=JSON.stringify(body);}
+  const r=await fetch('http://localhost:9100'+path,opt);
+  const t=await r.text();let j={};try{j=t?JSON.parse(t):{}}catch(_){j={raw:t}};
+  if(!r.ok)throw Error(j.fix||j.error||('Cleanter HTTP '+r.status));
+  return j;
+}
+async function activatePrinterFromGesture(){
+  try{
+    const h=await bridge('/health');
+    if(h.status!=='ok')throw Error('Cleanter tidak aktif.');
+    if(!h.printer?.connected)throw Error(h.printer?.fix||'Printer belum terhubung. Pilih WP58D/RPP02N sebagai default printer di Cleanter.');
+    localNetworkGranted=true;bridgeOK=true;
+    $('printerStatus').textContent='🟢 PRINTER SIAP — Cleanter + WP58D/RPP02N terhubung • AUTO PRINT AKTIF';
+    return true;
+  }catch(e){
+    bridgeOK=false;
+    $('printerStatus').textContent='🔴 '+(e.message||e);
+    return false;
+  }
+}
+async function checkBridge(){
+  if(!localNetworkGranted)return bridgeOK;
+  try{
+    const h=await bridge('/health');
+    bridgeOK=h.status==='ok'&&!!h.printer?.connected;
+    $('printerStatus').textContent=bridgeOK?'🟢 PRINTER SIAP • AUTO PRINT AKTIF':'🟡 Cleanter aktif, printer belum terhubung';
+    return bridgeOK;
+  }catch(e){bridgeOK=false;return false}
+}
 function printedSet(){try{return new Set(JSON.parse(localStorage.getItem(PRINTED_KEY)||'[]'))}catch(e){return new Set()}}
 function markPrinted(id){const s=printedSet();s.add(String(id));localStorage.setItem(PRINTED_KEY,JSON.stringify([...s].slice(-500)))}
-function testBytes(){const n=new Date(),s='\x1b\x40'+'================================\n'+'        ISSHO CAFE\n'+'       TEST PRINT DAPUR\n'+'================================\n'+'Tanggal : '+n.toLocaleDateString('id-ID',{timeZone:'Asia/Jakarta'})+'\n'+'Jam     : '+n.toLocaleTimeString('id-ID',{hour12:false,timeZone:'Asia/Jakarta'})+' WIB\n'+'--------------------------------\n'+'Printer : WOYA WP58D / RPP02N\n'+'Status  : KONEKSI BERHASIL\n'+'--------------------------------\n'+'Printer siap menerima data.\n'+'================================\n\n\n';return escBytes(s+'\x1d\x56\x00')}
-async function connectSerial(){if(!('serial' in navigator))throw Error('Web Serial tidak tersedia di perangkat ini. Pada tablet gunakan Printer Bridge Android.');if(serialPort&&serialWriter&&serialConnected)return true;serialPort=await navigator.serial.requestPort();try{await serialPort.open({baudRate:9600})}catch(e){await serialPort.open({baudRate:115200})}serialWriter=serialPort.writable.getWriter();serialConnected=true;$('printerStatus').textContent='🟢 Printer COM terhubung • AUTO PRINT AKTIF';return true}
-async function serialPrint(data){if(!serialWriter||!serialConnected)throw Error('Printer COM belum terhubung.');await serialWriter.write(data)}
-async function sendPrint(data){if(serialConnected&&serialWriter){await serialPrint(data);return 'COM'}const j=await bridge('/print','POST',data);bridgeOK=true;return 'BRIDGE'}
-function receiptBytes(o){const d=orderDateTime(o),lines=['================================','          ISSHO CAFE','          ORDER DAPUR','================================','No. Order : '+(o.order_number||'-'),'Tanggal   : '+d.date,'Jam       : '+d.time+' WIB','Meja      : '+(o.table_name||'Take Away'),'Pembayaran: '+(o.payment_method||'-'),'Status    : '+(o.payment_status||'-'),'--------------------------------'];for(const i of o.items||[])lines.push(String(i.name||'-')+' x '+String(i.qty||0)+(i.note?' | '+i.note:''));lines.push('--------------------------------','TOTAL     : '+money(o.total),'================================','        SEGERA DIPROSES','','');return escBytes('\x1b\x40'+lines.join('\n')+'\x1d\x56\x00')}
-async function printOrder(o,manual=false){const id=String(o.id);if(printing.has(id))return;if(!manual&&printedSet().has(id))return;const now=Date.now();if(!manual&&retryAt.has(id)&&retryAt.get(id)>now)return;printing.add(id);try{const mode=await sendPrint(receiptBytes(o));markPrinted(id);retryAt.delete(id);$('printerStatus').textContent='🟢 '+o.order_number+' '+(manual?'berhasil dicetak manual':'berhasil dicetak otomatis')+' via '+mode}catch(e){retryAt.set(id,Date.now()+5000);$('printerStatus').textContent='🔴 Gagal cetak '+(o.order_number||'order')+': '+(e.message||e)}finally{printing.delete(id)}}
-async function testPrinter(){try{let mode;if(serialConnected&&serialWriter)mode=await sendPrint(testBytes());else{try{await connectBridge();mode=(await bridge('/test','POST',new Uint8Array()),'BRIDGE')}catch(e){await connectSerial();mode=await sendPrint(testBytes())}}$('printerStatus').textContent='🟢 Test print berhasil via '+mode+' • AUTO PRINT AKTIF';alert('Test print berhasil dikirim ke printer.')}catch(e){$('printerStatus').textContent='🔴 Test print gagal: '+(e.message||e);alert('Test print gagal: '+(e.message||e))}}
-async function login(){const p=$('pin').value.trim();if(!/^\d{4,8}$/.test(p))return $('msg').innerHTML='<div class="err">PIN tidak valid.</div>';try{const raw=await api('/rest/v1/rpc/staff_role',{method:'POST',body:JSON.stringify({p_pin:p})});const role=String(typeof raw==='string'?raw:(Array.isArray(raw)?raw[0]:(raw&&raw.role)||'')).toUpperCase();if(role!=='DAPUR')throw Error('PIN bukan akun Dapur.');P=p;$('login').className='hidden';$('app').className='';await checkBridge();await load()}catch(e){$('msg').innerHTML='<div class="err">Login gagal: '+esc(e.message)+'</div>'}}
+async function sendPrint(data){
+  if(serialConnected&&serialWriter){await serialPrint(data);return 'COM'}
+  if(!localNetworkGranted)throw Error('Printer belum diaktifkan. Tekan AKTIFKAN PRINTER.');
+  const j=await bridge('/print','POST',data);
+  bridgeOK=true;return 'CLEANter';
+}
+function receiptPayload(o){
+ const d=orderDateTime(o);
+ const content=[
+  {type:'text',text:'ISSHO CAFE',align:'center',bold:true,size:'large'},
+  {type:'text',text:'ORDER DAPUR',align:'center',bold:true},
+  {type:'divider'},
+  {type:'row',left:'No. Order',right:String(o.order_number||'-')},
+  {type:'row',left:'Tanggal',right:d.date},
+  {type:'row',left:'Jam',right:d.time+' WIB'},
+  {type:'row',left:'Meja',right:String(o.table_name||'Take Away')},
+  {type:'row',left:'Bayar',right:String(o.payment_method||'-')},
+  {type:'divider'}
+ ];
+ for(const i of o.items||[])content.push({type:'row',left:String(i.name||'-')+' x '+String(i.qty||0),right:i.note?String(i.note):''});
+ content.push({type:'divider'},{type:'row',left:'TOTAL',right:money(o.total),bold:true},{type:'text',text:'SEGERA DIPROSES',align:'center',bold:true},{type:'feed',lines:3});
+ return {cut:true,content};
+}
+function testPayload(){
+ const n=new Date();
+ return {cut:true,content:[
+  {type:'text',text:'ISSHO CAFE',align:'center',bold:true,size:'large'},
+  {type:'text',text:'TEST PRINT DAPUR',align:'center',bold:true},
+  {type:'divider'},
+  {type:'row',left:'Tanggal',right:n.toLocaleDateString('id-ID',{timeZone:'Asia/Jakarta'})},
+  {type:'row',left:'Jam',right:n.toLocaleTimeString('id-ID',{hour12:false,timeZone:'Asia/Jakarta'})+' WIB'},
+  {type:'row',left:'Printer',right:'WP58D / RPP02N'},
+  {type:'text',text:'KONEKSI BERHASIL',align:'center',bold:true},
+  {type:'feed',lines:3}
+ ]};
+}
+async function printOrder(o,manual=false){
+ const id=String(o.id);
+ if(printing.has(id))return;
+ if(!manual&&printedSet().has(id))return;
+ const now=Date.now();
+ if(!manual&&retryAt.has(id)&&retryAt.get(id)>now)return;
+ printing.add(id);
+ try{
+  if(!bridgeOK&&!serialConnected)throw Error('Printer belum diaktifkan.');
+  const mode=await sendPrint(receiptPayload(o));
+  markPrinted(id);retryAt.delete(id);
+  $('printerStatus').textContent='🟢 '+o.order_number+' '+(manual?'berhasil dicetak manual':'berhasil dicetak otomatis')+' via '+mode;
+ }catch(err){
+  retryAt.set(id,Date.now()+5000);
+  $('printerStatus').textContent='🔴 Gagal cetak '+(o.order_number||'order')+': '+(err.message||err);
+ }finally{printing.delete(id)}
+}
+async function testPrinter(){
+ try{
+  if(!bridgeOK&&!serialConnected){
+   const ok=await activatePrinterFromGesture();
+   if(!ok)throw Error($('printerStatus').textContent.replace(/^🔴\s*/,''));
+  }
+  const mode=await sendPrint(testPayload());
+  $('printerStatus').textContent='🟢 TEST PRINT BERHASIL via '+mode+' • AUTO PRINT AKTIF';
+  alert('Test print berhasil. Printer siap untuk AUTO PRINT.');
+ }catch(e){
+  $('printerStatus').textContent='🔴 Test print gagal: '+(e.message||e);
+  alert('Test print gagal: '+(e.message||e));
+ }
+}
+async function login(){const p=$('pin').value.trim();if(!/^\d{4,8}$/.test(p))return $('msg').innerHTML='<div class="err">PIN tidak valid.</div>';try{const raw=await api('/rest/v1/rpc/staff_role',{method:'POST',body:JSON.stringify({p_pin:p})});const role=String(typeof raw==='string'?raw:(Array.isArray(raw)?raw[0]:(raw&&raw.role)||'')).toUpperCase();if(role!=='DAPUR')throw Error('PIN bukan akun Dapur.');P=p;$('login').className='hidden';$('app').className='';$('printerStatus').textContent='🟡 Tekan AKTIFKAN PRINTER satu kali untuk mengizinkan akses printer.';await load()}catch(e){$('msg').innerHTML='<div class="err">Login gagal: '+esc(e.message)+'</div>'}}
 async function load(){if(!P)return;try{ORD=await api('/rest/v1/rpc/staff_get_orders',{method:'POST',body:JSON.stringify({p_pin:P})});render();$('live').textContent='● TERHUBUNG • '+new Date().toLocaleTimeString('id-ID');for(const o of ORD){const id=String(o.id),eligible=o.payment_status==='PAID'&&!['COMPLETED','CANCELLED'].includes(o.order_status);if(eligible&&!known.has(id)){known.add(id);if(!first){$('alarm').style.display='block';try{const u=new SpeechSynthesisUtterance('Perhatian. Order baru masuk.');u.lang='id-ID';speechSynthesis.speak(u)}catch(e){}setTimeout(()=>$('alarm').style.display='none',5000)}}if(eligible&&!printedSet().has(id))printOrder(o,false)}first=false}catch(e){$('live').textContent='● KONEKSI GAGAL';$('list').innerHTML='<div class="err">'+esc(e.message)+'</div>'}}
 async function part(id,p){try{await api('/rest/v1/rpc/staff_update_order_part',{method:'POST',body:JSON.stringify({p_pin:P,p_order_id:id,p_part:p})});await load()}catch(e){alert('Gagal menyimpan progress: '+e.message)}}
 async function status(id,s){try{await api('/rest/v1/rpc/staff_update_order',{method:'POST',body:JSON.stringify({p_pin:P,p_order_id:id,p_status:s})});await load()}catch(e){alert('Gagal mengubah status: '+e.message)}}
-$('loginBtn').onclick=login;$('refreshBtn').onclick=load;$('logoutBtn').onclick=()=>location.reload();$('pin').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('connectPrinterBtn').onclick=async()=>{try{await connectBridge();await load()}catch(e){try{await connectSerial();await load()}catch(x){$('printerStatus').textContent='🔴 Gagal menghubungkan printer: '+(x.message||e.message);alert('Pastikan Printer Bridge Android aktif dan WP58D sudah Pair di Bluetooth Android, atau pilih COM printer di Windows.')}}};$('testPrinterBtn').onclick=testPrinter;
+$('loginBtn').onclick=login;$('refreshBtn').onclick=load;$('logoutBtn').onclick=()=>location.reload();$('pin').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('connectPrinterBtn').onclick=async()=>{const ok=await activatePrinterFromGesture();if(ok){await load();return}try{await connectSerial();await load()}catch(x){$('printerStatus').textContent='🔴 Gagal menghubungkan printer: '+(x.message||'');alert('Pastikan Cleanter aktif, WP58D/RPP02N sudah Pair di Bluetooth Android, dan printer dipilih sebagai default di Cleanter.')}};$('testPrinterBtn').onclick=testPrinter;
 $('list').addEventListener('click',e=>{const a=e.target.closest('.autoPrintBtn');if(a){const o=ORD.find(x=>String(x.id)===String(a.dataset.id));if(o)printOrder(o,false);return}const m=e.target.closest('.manualPrintBtn');if(m){const o=ORD.find(x=>String(x.id)===String(m.dataset.id));if(o)printOrder(o,true);return}const p=e.target.closest('.partBtn');if(p)return part(p.dataset.id,p.dataset.part);const s=e.target.closest('.statusBtn');if(s)return status(s.dataset.id,s.dataset.status)});
-setInterval(()=>{if(P)load()},2500);setInterval(()=>{if(P)checkBridge()},10000);window.addEventListener('beforeunload',async()=>{try{if(serialWriter){serialWriter.releaseLock();serialWriter=null}if(serialPort&&serialPort.readable)await serialPort.close()}catch(e){}});
+setInterval(()=>{if(P)load()},2500);setInterval(()=>{if(P&&localNetworkGranted)checkBridge()},10000);window.addEventListener('beforeunload',async()=>{try{if(serialWriter){serialWriter.releaseLock();serialWriter=null}if(serialPort&&serialPort.readable)await serialPort.close()}catch(e){}});
 </script></body></html>
