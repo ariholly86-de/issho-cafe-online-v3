@@ -8,11 +8,11 @@
 <body><div id="alarm" class="alarm">🔔 ORDER BARU — SEGERA DITANGANI</div><main class="wrap">
 <header class="card"><div class="row"><div><h1 style="margin:0">🍳 ISSHO CAFE — DAPUR</h1><div class="muted">Progress Makanan & Minuman terhubung langsung ke Kasir</div></div><b id="live">● SIAP</b></div></header>
 <section id="login" class="card"><h2>🔐 Login Dapur</h2><input id="pin" type="password" inputmode="numeric" maxlength="8" placeholder="PIN Dapur" style="width:100%;padding:12px;background:#1b1b1b;color:#fff;border:1px solid #444;border-radius:9px"><div class="actions"><button id="loginBtn" class="gold">Masuk Dapur</button></div><div id="msg"></div></section>
-<section id="app" class="hidden"><div class="card printer"><div class="row"><div><h2 style="margin:0">🖨️ Printer Dapur</h2><div id="printerStatus" class="muted">Memeriksa koneksi printer…</div></div><b class="green" style="padding:8px 10px;border-radius:9px">AUTO PRINT AKTIF</b></div><div class="muted" style="margin-top:8px">Printer Dapur menggunakan Printer Bridge Android untuk Bluetooth Classic. Jika memakai Windows/USB-Serial, tombol Hubungkan Printer memakai Web Serial.</div><div class="printerBtns"><button id="connectPrinterBtn" class="blue">🔌 Hubungkan Printer</button><button id="testPrinterBtn" class="green">🧾 Test Print</button></div></div>
+<section id="app" class="hidden"><div class="card printer"><div class="row"><div><h2 style="margin:0">🖨️ Printer Dapur</h2><div id="printerStatus" class="muted">Memeriksa koneksi printer…</div></div><b class="green" style="padding:8px 10px;border-radius:9px">AUTO PRINT AKTIF</b></div><div class="muted" style="margin-top:8px">Printer Dapur menggunakan Bluetooth Classic melalui Cleanter Android. Pair WP58D/RPP02N di Bluetooth Android dan pilih sebagai Default Printer di Cleanter.</div><div class="printerBtns"><button id="connectPrinterBtn" class="blue">🖨️ AKTIFKAN PRINTER BLUETOOTH</button><button id="testPrinterBtn" class="green">🧾 Test Print</button></div></div>
 <div class="card"><div class="row"><div><h2 style="margin:0">Order Dapur</h2><div id="state" class="muted">Menunggu...</div></div><div class="actions"><button id="refreshBtn" class="gold">🔄 Refresh</button><button id="logoutBtn" class="dark">Keluar</button></div></div></div><div id="list"></div><div id="history"></div></section></main>
 <script>
-const U='https://xvhimyflrqrdudijwjdn.supabase.co',K=['sb_','publishable_','WHyroGN6czktqO5F8L4Xng_P7p5a3St'].join(''),BRIDGE_HOSTS=['http://127.0.0.1:9100','http://localhost:9100'],PRINTED_KEY='issho_dapur_printed_orders_v5';
-let P='',ORD=[],known=new Set(),first=true,bridgeOK=false,printing=new Set(),retryAt=new Map(),serialPort=null,serialWriter=null,serialConnected=false;
+const U='https://xvhimyflrqrdudijwjdn.supabase.co',K=['sb_','publishable_','WHyroGN6czktqO5F8L4Xng_P7p5a3St'].join(''),PRINTED_KEY='issho_dapur_printed_orders_v6';
+let P='',ORD=[],known=new Set(),first=true,bridgeOK=false,printing=new Set(),retryAt=new Map();
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n)||0),esc=s=>String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;',"'":'&#39;'}[m]));
 function orderDateTime(o){const raw=o?.created_at||o?.order_date||o?.ordered_at||o?.createdAt||o?.orderDate;if(raw){const d=new Date(raw);if(!isNaN(d))return{date:d.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Asia/Jakarta'}),time:d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'Asia/Jakarta'})}}const m=String(o?.order_number||'').match(/^ISS-(\d{6})-(\d{6})-/i);if(m){const ds=m[1],ts=m[2],yy=Number(ds.slice(0,2)),mm=Number(ds.slice(2,4)),dd=Number(ds.slice(4,6)),hh=Number(ts.slice(0,2)),mi=Number(ts.slice(2,4)),ss=Number(ts.slice(4,6));return{date:mm>=1&&mm<=12&&dd>=1&&dd<=31?String(dd).padStart(2,'0')+'/'+String(mm).padStart(2,'0')+'/20'+String(yy).padStart(2,'0'):'-',time:hh<=23&&mi<=59&&ss<=59?String(hh).padStart(2,'0')+':'+String(mi).padStart(2,'0')+':'+String(ss).padStart(2,'0'):'-'}}return{date:'-',time:'-'}}
 async function api(path,opt={}){const h={apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},r=await fetch(U+path,Object.assign({cache:'no-store'},opt,{headers:h})),t=await r.text();if(!r.ok)throw Error(t);return t?JSON.parse(t):null}
@@ -57,10 +57,9 @@ async function checkBridge(){
 function printedSet(){try{return new Set(JSON.parse(localStorage.getItem(PRINTED_KEY)||'[]'))}catch(e){return new Set()}}
 function markPrinted(id){const s=printedSet();s.add(String(id));localStorage.setItem(PRINTED_KEY,JSON.stringify([...s].slice(-500)))}
 async function sendPrint(data){
-  if(serialConnected&&serialWriter){await serialPrint(data);return 'COM'}
-  if(!localNetworkGranted)throw Error('Printer belum diaktifkan. Tekan AKTIFKAN PRINTER.');
+  if(!localNetworkGranted)throw Error('Printer Bluetooth belum diaktifkan. Tekan AKTIFKAN PRINTER BLUETOOTH.');
   const j=await bridge('/print','POST',data);
-  bridgeOK=true;return 'CLEANter';
+  bridgeOK=true;return 'CLEANter Bluetooth';
 }
 function receiptPayload(o){
  const d=orderDateTime(o);
@@ -100,7 +99,7 @@ async function printOrder(o,manual=false){
  if(!manual&&retryAt.has(id)&&retryAt.get(id)>now)return;
  printing.add(id);
  try{
-  if(!bridgeOK&&!serialConnected)throw Error('Printer belum diaktifkan.');
+  if(!bridgeOK)throw Error('Printer Bluetooth belum diaktifkan.');
   const mode=await sendPrint(receiptPayload(o));
   markPrinted(id);retryAt.delete(id);
   $('printerStatus').textContent='🟢 '+o.order_number+' '+(manual?'berhasil dicetak manual':'berhasil dicetak otomatis')+' via '+mode;
@@ -111,7 +110,7 @@ async function printOrder(o,manual=false){
 }
 async function testPrinter(){
  try{
-  if(!bridgeOK&&!serialConnected){
+  if(!bridgeOK){
    const ok=await activatePrinterFromGesture();
    if(!ok)throw Error($('printerStatus').textContent.replace(/^🔴\s*/,''));
   }
@@ -123,11 +122,11 @@ async function testPrinter(){
   alert('Test print gagal: '+(e.message||e));
  }
 }
-async function login(){const p=$('pin').value.trim();if(!/^\d{4,8}$/.test(p))return $('msg').innerHTML='<div class="err">PIN tidak valid.</div>';try{const raw=await api('/rest/v1/rpc/staff_role',{method:'POST',body:JSON.stringify({p_pin:p})});const role=String(typeof raw==='string'?raw:(Array.isArray(raw)?raw[0]:(raw&&raw.role)||'')).toUpperCase();if(role!=='DAPUR')throw Error('PIN bukan akun Dapur.');P=p;$('login').className='hidden';$('app').className='';$('printerStatus').textContent='🟡 Tekan AKTIFKAN PRINTER satu kali untuk mengizinkan akses printer.';await load()}catch(e){$('msg').innerHTML='<div class="err">Login gagal: '+esc(e.message)+'</div>'}}
+async function login(){const p=$('pin').value.trim();if(!/^\d{4,8}$/.test(p))return $('msg').innerHTML='<div class="err">PIN tidak valid.</div>';try{const raw=await api('/rest/v1/rpc/staff_role',{method:'POST',body:JSON.stringify({p_pin:p})});const role=String(typeof raw==='string'?raw:(Array.isArray(raw)?raw[0]:(raw&&raw.role)||'')).toUpperCase();if(role!=='DAPUR')throw Error('PIN bukan akun Dapur.');P=p;$('login').className='hidden';$('app').className='';$('printerStatus').textContent='🟡 Tekan AKTIFKAN PRINTER BLUETOOTH satu kali untuk mengizinkan akses printer.';await load()}catch(e){$('msg').innerHTML='<div class="err">Login gagal: '+esc(e.message)+'</div>'}}
 async function load(){if(!P)return;try{ORD=await api('/rest/v1/rpc/staff_get_orders',{method:'POST',body:JSON.stringify({p_pin:P})});render();$('live').textContent='● TERHUBUNG • '+new Date().toLocaleTimeString('id-ID');for(const o of ORD){const id=String(o.id),eligible=o.payment_status==='PAID'&&!['COMPLETED','CANCELLED'].includes(o.order_status);if(eligible&&!known.has(id)){known.add(id);if(!first){$('alarm').style.display='block';try{const u=new SpeechSynthesisUtterance('Perhatian. Order baru masuk.');u.lang='id-ID';speechSynthesis.speak(u)}catch(e){}setTimeout(()=>$('alarm').style.display='none',5000)}}if(eligible&&!printedSet().has(id))printOrder(o,false)}first=false}catch(e){$('live').textContent='● KONEKSI GAGAL';$('list').innerHTML='<div class="err">'+esc(e.message)+'</div>'}}
 async function part(id,p){try{await api('/rest/v1/rpc/staff_update_order_part',{method:'POST',body:JSON.stringify({p_pin:P,p_order_id:id,p_part:p})});await load()}catch(e){alert('Gagal menyimpan progress: '+e.message)}}
 async function status(id,s){try{await api('/rest/v1/rpc/staff_update_order',{method:'POST',body:JSON.stringify({p_pin:P,p_order_id:id,p_status:s})});await load()}catch(e){alert('Gagal mengubah status: '+e.message)}}
-$('loginBtn').onclick=login;$('refreshBtn').onclick=load;$('logoutBtn').onclick=()=>location.reload();$('pin').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('connectPrinterBtn').onclick=async()=>{const ok=await activatePrinterFromGesture();if(ok){await load();return}try{await connectSerial();await load()}catch(x){$('printerStatus').textContent='🔴 Gagal menghubungkan printer: '+(x.message||'');alert('Pastikan Cleanter aktif, WP58D/RPP02N sudah Pair di Bluetooth Android, dan printer dipilih sebagai default di Cleanter.')}};$('testPrinterBtn').onclick=testPrinter;
+$('loginBtn').onclick=login;$('refreshBtn').onclick=load;$('logoutBtn').onclick=()=>location.reload();$('pin').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('connectPrinterBtn').onclick=async()=>{const ok=await activatePrinterFromGesture();if(ok){await load();return}alert('Bluetooth belum siap. Buka Cleanter, pilih WP58D/RPP02N sebagai Default Printer, lalu tekan Izinkan jika Chrome meminta akses Apps on device.');};$('testPrinterBtn').onclick=testPrinter;
 $('list').addEventListener('click',e=>{const a=e.target.closest('.autoPrintBtn');if(a){const o=ORD.find(x=>String(x.id)===String(a.dataset.id));if(o)printOrder(o,false);return}const m=e.target.closest('.manualPrintBtn');if(m){const o=ORD.find(x=>String(x.id)===String(m.dataset.id));if(o)printOrder(o,true);return}const p=e.target.closest('.partBtn');if(p)return part(p.dataset.id,p.dataset.part);const s=e.target.closest('.statusBtn');if(s)return status(s.dataset.id,s.dataset.status)});
-setInterval(()=>{if(P)load()},2500);setInterval(()=>{if(P&&localNetworkGranted)checkBridge()},10000);window.addEventListener('beforeunload',async()=>{try{if(serialWriter){serialWriter.releaseLock();serialWriter=null}if(serialPort&&serialPort.readable)await serialPort.close()}catch(e){}});
+setInterval(()=>{if(P)load()},2500);setInterval(()=>{if(P&&localNetworkGranted)checkBridge()},10000);
 </script></body></html>
