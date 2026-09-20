@@ -2,21 +2,21 @@
 <html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Arisan Ibu-Ibu RT</title>
 <style>
-:root{--p:#7c3aed;--p2:#5b21b6;--bg:#f6f5fb;--card:#fff;--txt:#1f2937;--muted:#6b7280;--ok:#059669;--danger:#dc2626}
+:root{--p:#a855f7;--p2:#7e22ce;--p3:#ec4899;--bg:#f8f7fc;--card:#fff;--txt:#24213a;--muted:#77748a;--ok:#10b981;--danger:#ef4444;--gold:#f59e0b}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial;background:var(--bg);color:var(--txt)}
-header{background:linear-gradient(135deg,var(--p2),var(--p));color:#fff;padding:22px 18px;position:sticky;top:0;z-index:3}
-.wrap{max-width:1100px;margin:auto}.brand{font-size:22px;font-weight:800}.sub{opacity:.85;font-size:13px;margin-top:3px}
-nav{display:flex;gap:8px;overflow:auto;padding:12px 0}nav button{border:0;border-radius:10px;padding:10px 14px;background:#fff;color:var(--p2);font-weight:700;white-space:nowrap;cursor:pointer}
-main{padding:18px}.page{display:none}.page.active{display:block}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 5px 20px #0000000b}.stat{font-size:28px;font-weight:800;margin-top:7px}.muted{color:var(--muted);font-size:13px}
-.toolbar{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}h2{margin:0 0 5px}
-button.primary{background:var(--p);color:#fff;border:0;border-radius:10px;padding:10px 15px;font-weight:700;cursor:pointer}button.secondary{border:1px solid #ddd;background:#fff;border-radius:10px;padding:10px 15px;cursor:pointer}
+header{background:linear-gradient(135deg,#6d28d9 0%,#9333ea 48%,#ec4899 100%);color:#fff;padding:24px 18px 0;position:sticky;top:0;z-index:3;box-shadow:0 8px 30px #7c3aed33}
+.wrap{max-width:1100px;margin:auto}.brand{font-size:24px;font-weight:900;letter-spacing:-.4px}.sub{opacity:.9;font-size:13px;margin-top:4px}
+nav{display:flex;gap:8px;overflow:auto;padding:15px 0 12px}nav button{border:1px solid #ffffff35;border-radius:12px;padding:10px 14px;background:#ffffff18;color:#fff;font-weight:800;white-space:nowrap;cursor:pointer;backdrop-filter:blur(8px)}nav button:hover{background:#fff;color:var(--p2)}
+main{padding:24px 18px 40px}.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:var(--card);border:1px solid #eeeafa;border-radius:20px;padding:20px;box-shadow:0 10px 30px #3b07640c}.stat{font-size:28px;font-weight:900;margin-top:8px;letter-spacing:-.5px}.muted{color:var(--muted);font-size:13px}
+.toolbar{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}h2{margin:0 0 5px;font-size:25px;letter-spacing:-.5px}
+button.primary{background:linear-gradient(135deg,var(--p2),var(--p3));color:#fff;border:0;border-radius:12px;padding:11px 16px;font-weight:800;cursor:pointer;box-shadow:0 7px 18px #a855f733}button.primary:hover{transform:translateY(-1px)}button.secondary{border:1px solid #ddd;background:#fff;border-radius:10px;padding:10px 15px;cursor:pointer}
 input,select{width:100%;padding:10px 11px;border:1px solid #ddd;border-radius:10px;margin-top:6px;background:#fff}label{font-size:13px;font-weight:700}.form{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}th,td{padding:11px;border-bottom:1px solid #eee;text-align:left;font-size:14px}th{background:#fafafa}.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#ede9fe;color:var(--p2);font-size:12px;font-weight:700}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}th,td{padding:11px;border-bottom:1px solid #eee;text-align:left;font-size:14px}th{background:#fafafa}.pill{display:inline-block;padding:5px 9px;border-radius:99px;background:#f3e8ff;color:var(--p2);font-size:12px;font-weight:800}
 .winner{text-align:center;padding:30px}.winner .name{font-size:34px;font-weight:900;color:var(--p2);margin:12px}
-.notice{padding:12px 14px;border-radius:12px;background:#fff7ed;margin-bottom:14px;color:#9a3412;font-size:13px}
-@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}main{padding:12px}.stat{font-size:23px}}
-@media(max-width:500px){.grid{grid-template-columns:1fr 1fr}.card{padding:14px}th,td{font-size:12px}}
+.notice{padding:13px 15px;border-radius:14px;background:linear-gradient(90deg,#fff7ed,#fff1f2);margin-bottom:16px;color:#9a3412;font-size:13px;border:1px solid #fed7aa}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}main{padding:16px 12px 32px}.stat{font-size:23px}}.form{grid-template-columns:1fr}main{padding:12px}.stat{font-size:23px}}
+@media(max-width:500px){.grid{grid-template-columns:1fr 1fr;gap:10px}.card{padding:14px;border-radius:16px}th,td{font-size:12px}.brand{font-size:21px}}.card{padding:14px}th,td{font-size:12px}}
 </style></head>
 <body>
 <header><div class="wrap"><div class="brand">🌸 Arisan Ibu-Ibu RT</div><div class="sub">Manajemen anggota, iuran, pengundian dan kas</div>
@@ -24,10 +24,41 @@ table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;ove
 <button onclick="show('dashboard')">🏠 Dashboard</button><button onclick="show('members')">👩 Anggota</button><button onclick="show('payments')">💰 Iuran</button><button onclick="show('draw')">🎲 Undian</button><button onclick="show('cash')">💵 Kas</button><button onclick="show('reports')">📊 Laporan</button>
 </nav></div></header>
 <main class="wrap">
-<section id="dashboard" class="page active"><div class="toolbar"><div><h2>Dashboard</h2><span class="muted">Ringkasan arisan saat ini</span></div></div>
-<div class="notice">Data demo tersimpan di browser ini. Untuk database bersama antar-HP, versi berikutnya perlu koneksi database online.</div>
-<div class="grid"><div class="card"><span class="muted">Anggota Aktif</span><div id="sMembers" class="stat">0</div></div><div class="card"><span class="muted">Total Iuran</span><div id="sPay" class="stat">Rp0</div></div><div class="card"><span class="muted">Saldo Kas</span><div id="sCash" class="stat">Rp0</div></div><div class="card"><span class="muted">Pemenang Terakhir</span><div id="sWinner" class="stat" style="font-size:18px">-</div></div></div>
-<div class="card" style="margin-top:14px"><h3>Menu Cepat</h3><button class="primary" onclick="show('members')">Tambah Anggota</button> <button class="secondary" onclick="show('payments')">Catat Iuran</button> <button class="secondary" onclick="show('draw')">Mulai Undian</button></div></section>
+<section id="dashboard" class="page active">
+<div class="dash-hero" style="background:linear-gradient(135deg,#581c87,#7e22ce 55%,#db2777);color:#fff;border-radius:24px;padding:24px;margin-bottom:18px;box-shadow:0 16px 35px #7e22ce2b">
+  <div style="display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap">
+    <div><div style="font-size:13px;opacity:.85;font-weight:700">SELAMAT DATANG 👋</div><h2 style="color:#fff;font-size:30px;margin:5px 0">Dashboard Arisan Ibu-Ibu RT</h2><div style="opacity:.9">Kelola anggota, iuran, kas, dan pengundian dengan lebih mudah.</div></div>
+    <div style="background:#ffffff1f;border:1px solid #ffffff33;padding:14px 18px;border-radius:16px;text-align:center"><div style="font-size:12px;opacity:.8">PERIODE</div><b id="dashPeriod" style="font-size:18px">-</b></div>
+  </div>
+</div>
+<div class="notice">💡 Data saat ini tersimpan di browser/perangkat ini. Versi database online bersama antar-HP bisa ditambahkan setelah desain dashboard selesai.</div>
+<div class="grid">
+  <div class="card" style="position:relative;overflow:hidden"><div style="font-size:28px">👩‍👩‍👧</div><span class="muted">Anggota Aktif</span><div id="sMembers" class="stat">0</div><div class="muted" style="margin-top:5px">Peserta arisan</div></div>
+  <div class="card" style="position:relative;overflow:hidden"><div style="font-size:28px">💰</div><span class="muted">Total Iuran</span><div id="sPay" class="stat">Rp0</div><div class="muted" style="margin-top:5px">Seluruh pembayaran</div></div>
+  <div class="card" style="position:relative;overflow:hidden"><div style="font-size:28px">💎</div><span class="muted">Saldo Kas</span><div id="sCash" class="stat">Rp0</div><div class="muted" style="margin-top:5px">Saldo berjalan</div></div>
+  <div class="card" style="position:relative;overflow:hidden"><div style="font-size:28px">🏆</div><span class="muted">Pemenang Terakhir</span><div id="sWinner" class="stat" style="font-size:18px">-</div><div class="muted" style="margin-top:5px">Hasil undian terbaru</div></div>
+</div>
+<div style="display:grid;grid-template-columns:1.4fr .8fr;gap:16px;margin-top:16px">
+  <div class="card">
+    <div class="toolbar"><div><h3 style="margin:0">Aksi Cepat ⚡</h3><span class="muted">Menu yang paling sering digunakan</span></div></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+      <button class="primary" onclick="show('members')">👩 Tambah Anggota</button>
+      <button class="secondary" onclick="show('payments')">💰 Catat Iuran</button>
+      <button class="secondary" onclick="show('draw')">🎉 Mulai Undian</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="margin:0 0 12px">Status Arisan</h3>
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px"><span class="muted">Anggota aktif</span><b id="dashActive">0</b></div>
+    <div style="height:9px;background:#f0eef7;border-radius:99px;overflow:hidden"><div id="dashBar" style="height:100%;width:0;background:linear-gradient(90deg,#8b5cf6,#ec4899);border-radius:99px"></div></div>
+    <div class="muted" style="margin-top:8px">Pantau kesiapan peserta arisan.</div>
+  </div>
+</div>
+<div class="card" style="margin-top:16px">
+  <div class="toolbar"><div><h3 style="margin:0">Aktivitas Terbaru</h3><span class="muted">Ringkasan kegiatan arisan</span></div><button class="secondary" onclick="show('reports')">Lihat Laporan →</button></div>
+  <div id="dashActivity" class="muted">Belum ada aktivitas.</div>
+</div>
+</section>
 
 <section id="members" class="page"><div class="toolbar"><div><h2>Data Anggota</h2><span class="muted">Kelola peserta arisan</span></div></div>
 <div class="card"><div class="form"><div><label>Nama</label><input id="mName" placeholder="Nama lengkap"></div><div><label>No. HP</label><input id="mPhone" placeholder="08..."></div><div><label>Alamat</label><input id="mAddr" placeholder="RT/RW"></div></div><button class="primary" style="margin-top:12px" onclick="addMember()">+ Tambah Anggota</button></div>
@@ -60,7 +91,7 @@ function addPayment(){let id=+pMember.value,a=+pAmount.value;if(!id||!a)return a
 function addCash(){let a=+cAmount.value;if(!a)return alert('Nominal wajib');db.cash.push({date:new Date().toISOString(),type:cType.value,note:cNote.value.trim(),amount:a});cNote.value='';save()}
 function drawWinner(){let used=new Set(db.draws.map(x=>x.member));let pool=db.members.filter(x=>x.active&&!used.has(x.id));if(!pool.length)return alert('Semua anggota aktif sudah pernah menang atau belum ada anggota.');let w=pool[Math.floor(Math.random()*pool.length)];db.draws.push({date:new Date().toISOString(),member:w.id});save();winnerBox.innerHTML='<div class="muted">Pemenang terpilih</div><div class="name">🏆 '+esc(w.name)+'</div>'}
 function render(){
-sMembers.textContent=db.members.filter(x=>x.active).length;
+const activeMembers=db.members.filter(x=>x.active).length;sMembers.textContent=activeMembers;dashActive.textContent=activeMembers;dashPeriod.textContent=new Date().toLocaleDateString('id-ID',{month:'long',year:'numeric'});dashBar.style.width=Math.min(activeMembers*10,100)+'%';
 let pay=db.payments.reduce((a,x)=>a+x.amount,0),cin=db.cash.filter(x=>x.type==='in').reduce((a,x)=>a+x.amount,0),cout=db.cash.filter(x=>x.type==='out').reduce((a,x)=>a+x.amount,0);
 sPay.textContent=rup(pay);sCash.textContent=rup(cin-cout);rMembers.textContent=db.members.filter(x=>x.active).length;rPay.textContent=rup(pay);rIn.textContent=rup(cin);rOut.textContent=rup(cout);
 let last=db.draws.at(-1);sWinner.textContent=last?(db.members.find(x=>x.id==last.member)?.name||'-'):'-';
