@@ -15,8 +15,8 @@ input,select{width:100%;padding:10px 11px;border:1px solid #ddd;border-radius:10
 table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}th,td{padding:11px;border-bottom:1px solid #eee;text-align:left;font-size:14px}th{background:#fafafa}.pill{display:inline-block;padding:5px 9px;border-radius:99px;background:#f3e8ff;color:var(--p2);font-size:12px;font-weight:800}
 .winner{text-align:center;padding:30px}.winner .name{font-size:34px;font-weight:900;color:var(--p2);margin:12px}
 .notice{padding:13px 15px;border-radius:14px;background:linear-gradient(90deg,#fff7ed,#fff1f2);margin-bottom:16px;color:#9a3412;font-size:13px;border:1px solid #fed7aa}
-@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}main{padding:16px 12px 32px}.stat{font-size:23px}}.form{grid-template-columns:1fr}main{padding:12px}.stat{font-size:23px}}
-@media(max-width:500px){.grid{grid-template-columns:1fr 1fr;gap:10px}.card{padding:14px;border-radius:16px}th,td{font-size:12px}.brand{font-size:21px}}.card{padding:14px}th,td{font-size:12px}}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.dash-two{grid-template-columns:1fr!important}.quick-grid{grid-template-columns:1fr!important}main{padding:16px 12px 32px}.stat{font-size:23px}}
+@media(max-width:500px){.grid{grid-template-columns:1fr 1fr;gap:10px}.card{padding:14px;border-radius:16px}th,td{font-size:12px}.brand{font-size:21px}}
 </style></head>
 <body>
 <header><div class="wrap"><div class="brand">🌸 Arisan Ibu-Ibu RT</div><div class="sub">Manajemen anggota, iuran, pengundian dan kas</div>
@@ -38,10 +38,10 @@ table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;ove
   <div class="card" style="position:relative;overflow:hidden"><div style="font-size:28px">💎</div><span class="muted">Saldo Kas</span><div id="sCash" class="stat">Rp0</div><div class="muted" style="margin-top:5px">Saldo berjalan</div></div>
   <div class="card" style="position:relative;overflow:hidden"><div style="font-size:28px">🏆</div><span class="muted">Pemenang Terakhir</span><div id="sWinner" class="stat" style="font-size:18px">-</div><div class="muted" style="margin-top:5px">Hasil undian terbaru</div></div>
 </div>
-<div style="display:grid;grid-template-columns:1.4fr .8fr;gap:16px;margin-top:16px">
+<div class="dash-two" style="display:grid;grid-template-columns:1.4fr .8fr;gap:16px;margin-top:16px">
   <div class="card">
     <div class="toolbar"><div><h3 style="margin:0">Aksi Cepat ⚡</h3><span class="muted">Menu yang paling sering digunakan</span></div></div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+    <div class="quick-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
       <button class="primary" onclick="show('members')">👩 Tambah Anggota</button>
       <button class="secondary" onclick="show('payments')">💰 Catat Iuran</button>
       <button class="secondary" onclick="show('draw')">🎉 Mulai Undian</button>
@@ -94,7 +94,7 @@ function render(){
 const activeMembers=db.members.filter(x=>x.active).length;sMembers.textContent=activeMembers;dashActive.textContent=activeMembers;dashPeriod.textContent=new Date().toLocaleDateString('id-ID',{month:'long',year:'numeric'});dashBar.style.width=Math.min(activeMembers*10,100)+'%';
 let pay=db.payments.reduce((a,x)=>a+x.amount,0),cin=db.cash.filter(x=>x.type==='in').reduce((a,x)=>a+x.amount,0),cout=db.cash.filter(x=>x.type==='out').reduce((a,x)=>a+x.amount,0);
 sPay.textContent=rup(pay);sCash.textContent=rup(cin-cout);rMembers.textContent=db.members.filter(x=>x.active).length;rPay.textContent=rup(pay);rIn.textContent=rup(cin);rOut.textContent=rup(cout);
-let last=db.draws.at(-1);sWinner.textContent=last?(db.members.find(x=>x.id==last.member)?.name||'-'):'-';
+let last=db.draws.at(-1);sWinner.textContent=last?(db.members.find(x=>x.id==last.member)?.name||'-'):'-';const acts=[];if(db.members.length)acts.push('👩 '+db.members.length+' anggota terdaftar');if(db.payments.length)acts.push('💰 '+db.payments.length+' pembayaran iuran dicatat');if(db.draws.length)acts.push('🏆 '+db.draws.length+' kali pengundian dilakukan');if(db.cash.length)acts.push('💵 '+db.cash.length+' transaksi kas dicatat');dashActivity.innerHTML=acts.length?acts.map(x=>'<div style="padding:9px 0;border-bottom:1px solid #f0eef5">'+x+'</div>').join(''):'Belum ada aktivitas. Mulai dengan menambahkan anggota.';
 memberRows.innerHTML=db.members.map((m,i)=>'<tr><td>'+(i+1)+'</td><td><b>'+esc(m.name)+'</b></td><td>'+esc(m.phone)+'</td><td>'+esc(m.addr)+'</td><td><span class="pill">'+(m.active?'Aktif':'Nonaktif')+'</span></td><td><button class="secondary" onclick="toggleMember('+m.id+')">'+(m.active?'Nonaktifkan':'Aktifkan')+'</button></td></tr>').join('');
 pMember.innerHTML='<option value="">Pilih anggota</option>'+db.members.filter(x=>x.active).map(m=>'<option value="'+m.id+'">'+esc(m.name)+'</option>').join('');
 payRows.innerHTML=db.payments.slice().reverse().map(x=>'<tr><td>'+new Date(x.date).toLocaleDateString('id-ID')+'</td><td>'+esc(db.members.find(m=>m.id==x.member)?.name||'-')+'</td><td>'+esc(x.period)+'</td><td>'+rup(x.amount)+'</td></tr>').join('');
