@@ -2,27 +2,25 @@
 <html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Arisan Ibu-Ibu RT</title>
 <style>
-:root{--p:#a855f7;--p2:#7e22ce;--p3:#ec4899;--bg:#f8f7fc;--card:#fff;--txt:#24213a;--muted:#77748a;--ok:#10b981;--danger:#ef4444;--gold:#f59e0b}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial;background:var(--bg);color:var(--txt)}
+:root{--p:#7c3aed;--p2:#5b21b6;--p3:#db2777;--bg:#f3f0fb;--card:#fff;--txt:#241b35;--muted:#746b85;--ok:#10b981;--danger:#ef4444;--gold:#f59e0b}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial;background:radial-gradient(circle at 15% 10%,#ede9fe 0,transparent 28%),radial-gradient(circle at 90% 20%,#fce7f3 0,transparent 25%),var(--bg);color:var(--txt);min-height:100vh}
 header{background:linear-gradient(135deg,#6d28d9 0%,#9333ea 48%,#ec4899 100%);color:#fff;padding:24px 18px 0;position:sticky;top:0;z-index:3;box-shadow:0 8px 30px #7c3aed33}
 .wrap{max-width:1100px;margin:auto}.brand{font-size:24px;font-weight:900;letter-spacing:-.4px}.sub{opacity:.9;font-size:13px;margin-top:4px}
-nav{display:flex;gap:8px;overflow:auto;padding:15px 0 12px}nav button{border:1px solid #ffffff35;border-radius:12px;padding:10px 14px;background:#ffffff18;color:#fff;font-weight:800;white-space:nowrap;cursor:pointer;backdrop-filter:blur(8px)}nav button:hover{background:#fff;color:var(--p2)}
-main{padding:24px 18px 40px}.page{display:none}.page.active{display:block}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:var(--card);border:1px solid #eeeafa;border-radius:20px;padding:20px;box-shadow:0 10px 30px #3b07640c}.stat{font-size:28px;font-weight:900;margin-top:8px;letter-spacing:-.5px}.muted{color:var(--muted);font-size:13px}
+nav{display:flex;gap:7px;overflow:auto;padding:13px 0 11px;scrollbar-width:none}nav::-webkit-scrollbar{display:none}nav button{border:0;border-radius:10px;padding:9px 12px;background:#ffffff18;color:#fff;font-weight:800;white-space:nowrap;cursor:pointer;backdrop-filter:blur(8px);font-size:12px}nav button:hover,nav button.active{background:#fff;color:var(--p2)}
+main{padding:22px 18px 45px;position:relative}.page{animation:fade .2s ease}@keyframes fade{from{opacity:.5;transform:translateY(4px)}to{opacity:1;transform:none}}.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:rgba(255,255,255,.92);border:1px solid #e9e2f5;border-radius:18px;padding:18px;box-shadow:0 10px 28px #4c1d9512;backdrop-filter:blur(8px)}.stat{font-size:28px;font-weight:900;margin-top:8px;letter-spacing:-.5px}.muted{color:var(--muted);font-size:13px}
 .toolbar{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}h2{margin:0 0 5px;font-size:25px;letter-spacing:-.5px}
 button.primary{background:linear-gradient(135deg,var(--p2),var(--p3));color:#fff;border:0;border-radius:12px;padding:11px 16px;font-weight:800;cursor:pointer;box-shadow:0 7px 18px #a855f733}button.primary:hover{transform:translateY(-1px)}button.secondary{border:1px solid #ddd;background:#fff;border-radius:10px;padding:10px 15px;cursor:pointer}
 input,select{width:100%;padding:10px 11px;border:1px solid #ddd;border-radius:10px;margin-top:6px;background:#fff}label{font-size:13px;font-weight:700}.form{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}th,td{padding:11px;border-bottom:1px solid #eee;text-align:left;font-size:14px}th{background:#fafafa}.pill{display:inline-block;padding:5px 9px;border-radius:99px;background:#f3e8ff;color:var(--p2);font-size:12px;font-weight:800}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}th,td{padding:11px;border-bottom:1px solid #eee;text-align:left;font-size:14px}th{background:#f7f4fb;color:#5b526b}.pill{display:inline-block;padding:5px 9px;border-radius:99px;background:#f3e8ff;color:var(--p2);font-size:12px;font-weight:800}
 .winner{text-align:center;padding:30px}.winner .name{font-size:34px;font-weight:900;color:var(--p2);margin:12px}
 .notice{padding:13px 15px;border-radius:14px;background:linear-gradient(90deg,#fff7ed,#fff1f2);margin-bottom:16px;color:#9a3412;font-size:13px;border:1px solid #fed7aa}
 @media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.dash-two{grid-template-columns:1fr!important}.quick-grid{grid-template-columns:1fr!important}main{padding:16px 12px 32px}.stat{font-size:23px}}
-@media(max-width:500px){.grid{grid-template-columns:1fr 1fr;gap:10px}.card{padding:14px;border-radius:16px}th,td{font-size:12px}.brand{font-size:21px}}
+@media(max-width:500px){header{padding:17px 12px 0}.grid{grid-template-columns:1fr 1fr;gap:9px}.card{padding:14px;border-radius:16px}th,td{font-size:12px}.brand{font-size:20px}.sub{font-size:11px}nav{gap:5px}nav button{padding:8px 10px;font-size:11px}main{padding:14px 10px 30px}.dash-hero{padding:18px!important;border-radius:19px!important}.dash-hero h2{font-size:23px!important}.toolbar h2{font-size:21px}}
 </style></head>
 <body>
 <header><div class="wrap"><div class="brand">🌸 Arisan Ibu-Ibu RT</div><div class="sub">Manajemen anggota, iuran, pengundian dan kas</div>
-<nav>
-<button onclick="show('dashboard')">🏠 Dashboard</button><button onclick="show('members')">👩 Anggota</button><button onclick="show('payments')">💰 Iuran</button><button onclick="show('draw')">🎲 Undian</button><button onclick="show('cash')">💵 Kas</button><button onclick="show('reports')">📊 Laporan</button>
-</nav></div></header>
+<nav id="mainNav"><button data-page="dashboard" onclick="show('dashboard')">🏠 Beranda</button><button data-page="members" onclick="show('members')">👥 Anggota</button><button data-page="payments" onclick="show('payments')">💳 Iuran</button><button data-page="draw" onclick="show('draw')">🎲 Undian</button><button data-page="cash" onclick="show('cash')">💰 Kas</button><button data-page="reports" onclick="show('reports')">📊 Laporan</button></nav></div></header>
 <main class="wrap">
 <section id="dashboard" class="page active">
 <div class="dash-hero" style="background:linear-gradient(135deg,#581c87,#7e22ce 55%,#db2777);color:#fff;border-radius:24px;padding:24px;margin-bottom:18px;box-shadow:0 16px 35px #7e22ce2b">
@@ -84,7 +82,7 @@ const K='arisan_rt_v1';let db=JSON.parse(localStorage.getItem(K)||'null')||{memb
 function save(){localStorage.setItem(K,JSON.stringify(db));render()}
 function rup(n){return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n||0)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function show(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');render()}
+function show(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('#mainNav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));render();window.scrollTo({top:0,behavior:'smooth'})}
 function addMember(){let n=mName.value.trim();if(!n)return alert('Nama wajib diisi');db.members.push({id:Date.now(),name:n,phone:mPhone.value.trim(),addr:mAddr.value.trim(),active:true});mName.value=mPhone.value=mAddr.value='';save()}
 function toggleMember(id){let m=db.members.find(x=>x.id==id);if(m)m.active=!m.active;save()}
 function addPayment(){let id=+pMember.value,a=+pAmount.value;if(!id||!a)return alert('Lengkapi pembayaran');db.payments.push({date:new Date().toISOString(),member:id,period:pPeriod.value||new Date().toISOString().slice(0,7),amount:a});save()}
@@ -95,11 +93,11 @@ const activeMembers=db.members.filter(x=>x.active).length;sMembers.textContent=a
 let pay=db.payments.reduce((a,x)=>a+x.amount,0),cin=db.cash.filter(x=>x.type==='in').reduce((a,x)=>a+x.amount,0),cout=db.cash.filter(x=>x.type==='out').reduce((a,x)=>a+x.amount,0);
 sPay.textContent=rup(pay);sCash.textContent=rup(cin-cout);rMembers.textContent=db.members.filter(x=>x.active).length;rPay.textContent=rup(pay);rIn.textContent=rup(cin);rOut.textContent=rup(cout);
 let last=db.draws.at(-1);sWinner.textContent=last?(db.members.find(x=>x.id==last.member)?.name||'-'):'-';const acts=[];if(db.members.length)acts.push('👩 '+db.members.length+' anggota terdaftar');if(db.payments.length)acts.push('💰 '+db.payments.length+' pembayaran iuran dicatat');if(db.draws.length)acts.push('🏆 '+db.draws.length+' kali pengundian dilakukan');if(db.cash.length)acts.push('💵 '+db.cash.length+' transaksi kas dicatat');dashActivity.innerHTML=acts.length?acts.map(x=>'<div style="padding:9px 0;border-bottom:1px solid #f0eef5">'+x+'</div>').join(''):'Belum ada aktivitas. Mulai dengan menambahkan anggota.';
-memberRows.innerHTML=db.members.map((m,i)=>'<tr><td>'+(i+1)+'</td><td><b>'+esc(m.name)+'</b></td><td>'+esc(m.phone)+'</td><td>'+<span title="'+esc(m.addr)+'">'+esc(m.addr)+'</span></td><td><span class="pill">'+(m.active?'Aktif':'Nonaktif')+'</span></td><td><button class="secondary" onclick="toggleMember('+m.id+')">'+(m.active?'Nonaktifkan':'Aktifkan')+'</button></td></tr>').join('');
+memberRows.innerHTML=db.members.map((m,i)=>'<tr><td>'+(i+1)+'</td><td><b>'+esc(m.name)+'</b></td><td>'+esc(m.phone)+'</td><td><span title="'+esc(m.addr)+'">'+esc(m.addr||'-')+'</span></td><td><span class="pill">'+(m.active?'Aktif':'Nonaktif')+'</span></td><td><button class="secondary" onclick="toggleMember('+m.id+')">'+(m.active?'Nonaktifkan':'Aktifkan')+'</button></td></tr>').join('');
 pMember.innerHTML='<option value="">Pilih anggota</option>'+db.members.filter(x=>x.active).map(m=>'<option value="'+m.id+'">'+esc(m.name)+'</option>').join('');
 payRows.innerHTML=db.payments.slice().reverse().map(x=>'<tr><td>'+new Date(x.date).toLocaleDateString('id-ID')+'</td><td>'+esc(db.members.find(m=>m.id==x.member)?.name||'-')+'</td><td>'+esc(x.period)+'</td><td>'+rup(x.amount)+'</td></tr>').join('');
 drawRows.innerHTML=db.draws.slice().reverse().map(x=>'<tr><td>'+new Date(x.date).toLocaleDateString('id-ID')+'</td><td>🏆 '+esc(db.members.find(m=>m.id==x.member)?.name||'-')+'</td></tr>').join('');
 cashRows.innerHTML=db.cash.slice().reverse().map(x=>'<tr><td>'+new Date(x.date).toLocaleDateString('id-ID')+'</td><td>'+ (x.type==='in'?'Masuk':'Keluar')+'</td><td>'+esc(x.note)+'</td><td>'+rup(x.amount)+'</td></tr>').join('');
 }
-render();
+render();show('dashboard');
 </script></body></html>
